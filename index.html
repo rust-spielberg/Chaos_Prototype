@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#e7ff00" />
+    <title>Audiokill — bad taste, loud music</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --acid: #e7ff00;
+        --pink: #ff2c91;
+        --ink: #171717;
+        --paper: #f5f0de;
+        --wood: #a96524;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background-color: var(--acid);
+        background-image: radial-gradient(#171717 0.8px, transparent 0.8px);
+        background-size: 11px 11px;
+        color: var(--ink);
+        font-family: "Arial Black", Impact, system-ui, sans-serif;
+      }
+
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, input:focus-visible {
+        outline: 4px dashed var(--pink);
+        outline-offset: 3px;
+      }
+      .hard-shadow { box-shadow: 8px 8px 0 var(--ink); }
+      .poster-shadow { text-shadow: 4px 4px 0 var(--pink), 7px 7px 0 var(--ink); }
+      .rule-status.is-valid { background-color: var(--acid); }
+      .rule-copy.is-valid { color: #166534; }
+      .captcha-tile {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border: 4px solid var(--ink);
+        background: #d7d4c8;
+        box-shadow: 4px 4px 0 var(--ink);
+        transition: transform .12s, background-color .12s;
+      }
+      .captcha-tile:hover { transform: rotate(-1deg) scale(1.025); }
+      .captcha-tile.is-selected { background: var(--acid); outline: 4px solid var(--pink); outline-offset: -8px; }
+      .captcha-wall {
+        position: absolute;
+        inset: 12% 10% 18%;
+        border: 3px solid #77766f;
+        background: linear-gradient(135deg, #e2e0d6, #c5c2b7);
+        box-shadow: inset 5px 5px 0 #ffffff55, inset -5px -5px 0 #88878033;
+      }
+      .captcha-wall::before, .captcha-wall::after {
+        content: "";
+        position: absolute;
+        top: 22%;
+        width: 2px;
+        height: 58%;
+        background: #a3a198;
+      }
+      .captcha-wall::before { left: 30%; }
+      .captcha-wall::after { right: 28%; }
+      .captcha-clock {
+        position: absolute;
+        top: 38%;
+        left: 50%;
+        width: 19px;
+        height: 19px;
+        border: 2px solid #55534d;
+        border-radius: 50%;
+        transform: translateX(-50%);
+      }
+      .captcha-clock::before, .captcha-clock::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 3px;
+        width: 1px;
+        height: 5px;
+        background: #55534d;
+        transform-origin: bottom;
+      }
+      .captcha-clock::after { transform: rotate(120deg); }
+      .captcha-marker {
+        position: absolute;
+        right: 13%;
+        bottom: 17%;
+        width: 8px;
+        height: 8px;
+        border: 1px solid white;
+        border-radius: 50%;
+        background: #ff2c91;
+        box-shadow: 0 0 0 1px #171717, 0 0 5px 2px #ff2c91;
+        pointer-events: none;
+      }
+      .captcha-shake { animation: captcha-shake .42s cubic-bezier(.36,.07,.19,.97) both; }
+      @keyframes captcha-shake {
+        10%, 90% { transform: translateX(-5px); }
+        20%, 80% { transform: translateX(8px); }
+        30%, 50%, 70% { transform: translateX(-11px); }
+        40%, 60% { transform: translateX(11px); }
+      }
+      .captcha-error { animation: captcha-flash .42s steps(2, end) 3; }
+      @keyframes captcha-flash { 50% { color: #ff0000; } }
+      .skull-easter-egg {
+        min-width: 24px;
+        min-height: 24px;
+        color: var(--ink);
+        cursor: pointer;
+        opacity: .42;
+        transition: opacity .15s ease, transform .15s ease;
+      }
+      .skull-easter-egg:hover, .skull-easter-egg:focus-visible { opacity: 1; transform: rotate(12deg) scale(1.2); }
+      .grain {
+        background-image: repeating-linear-gradient(0deg, transparent 0 3px, #00000012 3px 4px),
+          repeating-linear-gradient(90deg, transparent 0 19px, #fff2 19px 21px),
+          linear-gradient(92deg, #94501c, #d68a3e 19%, #a95c22 37%, #d08b48 56%, #98521d 78%, #c87a35);
+      }
+      .plank {
+        position: relative;
+        height: 54px;
+        border: 4px solid #321b0b;
+        border-radius: 999px;
+        box-shadow: 4px 8px 0 #171717, inset 0 5px 7px #ffffff55, inset 0 -7px 8px #321b0b99;
+        cursor: crosshair;
+        touch-action: none;
+        user-select: none;
+        transform: rotate(var(--log-tilt, 0deg));
+        transform-origin: center;
+        transition: transform .12s ease-out;
+      }
+      .plank::before {
+        content: "";
+        position: absolute;
+        inset: 6px 7px;
+        border-radius: inherit;
+        opacity: .85;
+        background: repeating-linear-gradient(0deg, transparent 0 5px, #54290780 6px 8px, transparent 9px 14px);
+        pointer-events: none;
+      }
+      .plank-tick {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #281508bb;
+        pointer-events: none;
+      }
+      .nail {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        width: 23px;
+        height: 23px;
+        border: 3px solid #777;
+        border-radius: 50%;
+        background: radial-gradient(circle at 32% 27%, #fff 0 12%, #f5f5f5 25%, #d7d7d7 68%, #aaa 100%);
+        box-shadow: 2px 3px 2px #171717aa, 0 0 0 2px #321b0b;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        transition: left .35s cubic-bezier(.18, .72, .28, 1);
+      }
+      .nail::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 9px;
+        width: 11px;
+        height: 3px;
+        background: #242424;
+        transform: rotate(-35deg);
+      }
+      .teleport {
+        position: absolute;
+        z-index: 5;
+        transition: left .15s steps(2, end), top .15s steps(2, end), transform .1s;
+      }
+      .spinner {
+        width: 76px;
+        height: 76px;
+        border: 9px dashed var(--pink);
+        border-top-color: var(--acid);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes jitter {
+        0%, 100% { transform: translate(0, 0) rotate(0); }
+        25% { transform: translate(-3px, 2px) rotate(-1deg); }
+        75% { transform: translate(3px, -2px) rotate(1deg); }
+      }
+      .jitter { animation: jitter .15s infinite; }
+      .consent-slab {
+        min-height: 70vh;
+        background: repeating-linear-gradient(135deg, #ff2c91 0 22px, #f50077 22px 44px);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+      }
+    </style>
+  </head>
+  <body class="selection:bg-pink-400">
+    <header class="flex items-center justify-between border-b-4 border-black bg-black px-4 py-3 text-[#e7ff00] sm:px-8">
+      <a class="text-xl font-black uppercase tracking-[-.08em] sm:text-2xl" href="#" aria-label="Audiokill home">AUDIO<span class="text-[#ff2c91]">KILL</span></a>
+      <span class="text-right text-[10px] font-bold uppercase tracking-[.18em] sm:text-xs">Bad taste. Loud music.<br />Zero good decisions.</span>
+    </header>
+
+    <main class="mx-auto min-h-[calc(100vh-60px)] max-w-7xl px-4 py-8 sm:px-8 sm:py-12">
+      <section id="login-screen" class="mx-auto max-w-3xl">
+        <div class="mb-6 inline-block -rotate-2 border-4 border-black bg-[#ff2c91] px-3 py-1 text-xs uppercase shadow-[4px_4px_0_#171717]">Certified bad design / No. 001</div>
+        <h1 class="poster-shadow mb-8 text-6xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-8xl">Enter<br />the noise<span class="text-[#ff2c91]">!</span></h1>
+        <form id="login-form" class="hard-shadow border-4 border-black bg-[#f5f0de] p-5 sm:p-8" novalidate>
+          <div class="mb-6 grid gap-4 sm:grid-cols-2">
+            <label class="block text-xs font-black uppercase tracking-widest" for="username">
+              Your totally fake name
+              <input id="username" name="username" autocomplete="off" required maxlength="32" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold outline-none" placeholder="e.g. DJ Regret" />
+            </label>
+            <label class="block text-xs font-black uppercase tracking-widest" for="password">
+              Password-shaped obstacle
+              <input id="password" name="password" type="password" autocomplete="new-password" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold outline-none" placeholder="Make it make no sense" />
+            </label>
+          </div>
+          <div class="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-y-4 border-black py-3">
+            <h2 class="text-xl font-black uppercase sm:text-2xl">You have plenty of reasons to give up.</h2>
+            <span id="rule-count" class="bg-black px-2 py-1 text-xs font-black uppercase text-[#e7ff00]" aria-live="polite">0 / 4 appeased · 4 / 12 revealed</span>
+          </div>
+          <ol id="rules-list" class="grid gap-x-8 gap-y-2 sm:grid-cols-2" aria-live="polite"></ol>
+          <div class="mt-7 flex flex-col items-start gap-3 border-t-4 border-black pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <button id="login-button" type="submit" disabled class="border-4 border-black bg-black px-7 py-3 text-lg font-black uppercase tracking-wide text-white transition enabled:bg-[#e7ff00] enabled:text-black enabled:hover:-translate-y-1 enabled:hover:shadow-[5px_5px_0_#ff2c91] disabled:cursor-not-allowed disabled:opacity-40">Login (lol)</button>
+            <p class="max-w-sm text-[10px] font-bold uppercase leading-relaxed">A fake login for a fake music player. Nothing is sent or saved. Your password is only judged by this page.</p>
+          </div>
+        </form>
+      </section>
+
+      <section id="captcha-screen" class="mx-auto hidden max-w-3xl" aria-labelledby="captcha-title">
+        <div id="captcha-card" class="hard-shadow border-4 border-black bg-[#f5f0de] p-5 sm:p-8">
+          <div class="mb-5 inline-block -rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">One last totally normal step</div>
+          <h1 id="captcha-title" tabindex="-1" class="mb-4 text-4xl font-black uppercase leading-[.9] tracking-tight sm:text-6xl">Prove you are not a robot (or else)</h1>
+          <p class="mb-2 text-sm font-black uppercase">Select all images that capture the profound spiritual emptiness of Monday morning at 8:00 AM.</p>
+          <p class="mb-5 text-[10px] font-bold uppercase">Hint: look for the tiny pink speck near the bottom-right of one image. Pick that image, then verify humanity.</p>
+          <p id="captcha-error" class="mb-3 min-h-5 text-xs font-black uppercase text-red-700" aria-live="assertive"></p>
+          <div id="captcha-grid" class="grid grid-cols-3 gap-3 sm:gap-4" aria-label="Nine Monday morning images"></div>
+          <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t-4 border-black pt-5">
+            <button id="verify-humanity" type="button" class="border-4 border-black bg-[#e7ff00] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Verify humanity</button>
+            <span class="text-[9px] font-bold uppercase">Your clicks are not recorded or sent anywhere.</span>
+          </div>
+        </div>
+        <div class="mt-8 text-center">
+          <button id="robot-surrender" type="button" class="border-0 bg-transparent text-[8px] font-bold text-black/20 underline decoration-black/10 hover:text-black/70">Are you actually a robot? Click here to surrender ₹8,000</button>
+        </div>
+      </section>
+
+      <section id="player-screen" class="hidden">
+        <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div class="mb-2 inline-block rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">Now ruining your day</div>
+            <h1 class="poster-shadow text-6xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-8xl">Audiokill<span class="text-[#ff2c91]">.</span></h1>
+          </div>
+          <div id="welcome-name" class="border-4 border-black bg-[#f5f0de] px-3 py-2 text-xs font-black uppercase"></div>
+        </div>
+
+        <div class="grid items-start gap-7 lg:grid-cols-[1.3fr_.7fr]">
+          <section class="hard-shadow relative border-4 border-black bg-[#f5f0de] p-5 sm:p-8" aria-label="Music player">
+            <div class="mb-8 flex items-center gap-5">
+              <div class="flex h-28 w-28 shrink-0 items-center justify-center border-4 border-black bg-[#ff2c91] text-5xl shadow-[5px_5px_0_#171717] sm:h-36 sm:w-36 sm:text-6xl" aria-hidden="true">☠</div>
+              <div class="min-w-0">
+                <p class="mb-1 text-[10px] font-black uppercase tracking-[.25em]">Track <span id="track-number">01</span> / probably forever</p>
+                <h2 id="track-title" class="break-words text-3xl font-black uppercase leading-[.92] sm:text-5xl">Screaming In A Lift</h2>
+                <p id="track-artist" class="mt-3 text-xs font-bold uppercase">The Unskippables</p>
+              </div>
+            </div>
+            <div class="mb-3 flex justify-between text-[10px] font-black tabular-nums"><span id="elapsed">00:00</span><span>∞:∞</span></div>
+            <div class="mb-8 h-4 border-2 border-black bg-white p-[2px]">
+              <div id="progress-bar" class="h-full w-[9%] bg-[#ff2c91]"></div>
+            </div>
+            <div class="flex min-h-32 items-center justify-center border-y-4 border-black py-5">
+              <button id="play-button" class="teleport left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-4 border-black bg-[#e7ff00] px-8 py-3 text-lg font-black uppercase shadow-[5px_5px_0_#171717] hover:bg-[#ff2c91]" type="button">▶ Play</button>
+            </div>
+            <span class="mt-1 block text-[9px] font-black uppercase tracking-wider">Try to press pause. Go on.</span>
+            <div class="mt-6">
+              <div class="mb-3 flex items-center justify-between gap-2">
+                <h3 class="text-lg font-black uppercase sm:text-xl">Volume, by carpentry</h3>
+                <span id="volume-readout" class="shrink-0 border-2 border-black bg-[#e7ff00] px-2 py-1 text-xs font-black uppercase">??%</span>
+              </div>
+              <p class="mb-3 text-[10px] font-bold uppercase">Press Play for the cursed synth. Click the left or right half of the log to tip it and send the knob sliding that way.</p>
+              <div id="plank-stage" class="relative my-5 px-1 py-6">
+                <div id="plank" class="plank grain" role="slider" aria-label="Tilting wooden volume log" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" tabindex="0">
+                  <span class="plank-tick" style="left:10%"></span><span class="plank-tick" style="left:20%"></span><span class="plank-tick" style="left:30%"></span><span class="plank-tick" style="left:40%"></span><span class="plank-tick" style="left:50%"></span><span class="plank-tick" style="left:60%"></span><span class="plank-tick" style="left:70%"></span><span class="plank-tick" style="left:80%"></span><span class="plank-tick" style="left:90%"></span>
+                  <span id="nail" class="nail" style="left:100%"></span>
+                </div>
+              </div>
+              <div class="mt-2 flex justify-between text-[9px] font-black uppercase"><span>Whispering regret</span><span>Woodenly loud</span></div>
+            </div>
+            <div class="mt-7 flex flex-wrap items-center justify-between gap-3">
+              <p class="text-[10px] font-bold uppercase">Mood: <span id="mood" class="bg-[#ff2c91] px-1">Mildly alarmed</span></p>
+              <button id="next-track" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-2 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Next track →</button>
+            </div>
+          </section>
+
+          <aside class="hard-shadow border-4 border-black bg-[#e7ff00] p-5 sm:p-7">
+            <div class="mb-5 flex items-center justify-between border-b-4 border-black pb-3">
+              <h2 class="text-2xl font-black uppercase">The queue</h2><span class="text-2xl">↯</span>
+            </div>
+            <ol id="queue" class="space-y-3 text-xs font-black uppercase">
+              <li class="border-2 border-black bg-[#ff2c91] p-3">01 &nbsp; Screaming In A Lift</li>
+              <li class="border-2 border-black bg-[#f5f0de] p-3">02 &nbsp; 4'33" (Remix)</li>
+              <li class="border-2 border-black bg-[#f5f0de] p-3">03 &nbsp; Buffering Is My Love Language</li>
+              <li class="border-2 border-black bg-[#f5f0de] p-3">04 &nbsp; Untitled Final Final 7</li>
+            </ol>
+            <div class="mt-8 rotate-1 border-4 border-black bg-black p-4 text-[#e7ff00]">
+              <p class="text-xs font-black uppercase tracking-widest">Listener satisfaction</p>
+              <div class="mt-3 flex gap-1" aria-label="One out of five satisfaction">
+                <span class="h-5 flex-1 bg-[#ff2c91]"></span><span class="h-5 flex-1 border-2 border-[#e7ff00]"></span><span class="h-5 flex-1 border-2 border-[#e7ff00]"></span><span class="h-5 flex-1 border-2 border-[#e7ff00]"></span><span class="h-5 flex-1 border-2 border-[#e7ff00]"></span>
+              </div>
+              <p class="mt-2 text-[10px] font-bold uppercase">One star. We took it personally.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <section id="cookie-banner" class="consent-slab fixed inset-x-0 bottom-0 z-20 hidden max-h-[90vh] items-center justify-center overflow-y-auto border-t-[10px] border-black p-4 sm:p-8" aria-labelledby="cookie-title">
+      <div class="hard-shadow my-auto w-full max-w-4xl border-4 border-black bg-[#e7ff00] p-5 sm:p-9">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
+          <span class="bg-black px-2 py-1 text-[10px] font-black uppercase text-[#e7ff00]">A totally unnecessary interruption</span>
+          <span class="text-xs font-black uppercase">Cookies? We don't even have a backend.</span>
+        </div>
+        <h2 id="cookie-title" class="mb-4 text-4xl font-black uppercase leading-[.9] tracking-tight sm:text-6xl">We value your<br /><span class="text-[#ff2c91]">inconvenience.<button id="skull-exit" type="button" class="skull-easter-egg ml-1 inline-flex items-center justify-center align-middle text-sm leading-none" aria-label="Skull" title="Tap five times to escape">☠</button></span></h2>
+        <p class="mb-6 max-w-2xl text-sm font-bold leading-relaxed">This very real-looking banner is a parody. Audiokill does not set cookies or track you. There is no close button because that would be good design.</p>
+        <div id="cookie-sub-banners" class="space-y-3"></div>
+        <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+          <button id="reject-cookies" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Reject all</button>
+          <button id="accept-cookies" type="button" class="border-4 border-black bg-black px-5 py-3 text-sm font-black uppercase text-[#e7ff00] shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Accept (bad idea)</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="loading-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="loading-title">
+      <div class="w-full max-w-md border-4 border-black bg-[#f5f0de] p-7 text-center shadow-[10px_10px_0_#ff2c91]">
+        <h2 id="loading-title" class="mb-6 text-3xl font-black uppercase">Finding the next track...</h2>
+        <div class="spinner mx-auto" aria-hidden="true"></div>
+        <p id="loading-percent" class="mt-5 text-4xl font-black tabular-nums">0%</p>
+        <p class="mt-2 text-xs font-black uppercase">Please enjoy this completely reasonable wait.</p>
+      </div>
+    </div>
+    <div id="error-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 p-4" role="alertdialog" aria-modal="true" aria-labelledby="error-title">
+      <div class="w-full max-w-lg border-4 border-black bg-[#ff2c91] p-6 shadow-[10px_10px_0_#e7ff00]">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <h2 id="error-title" class="text-2xl font-black uppercase">AUDIOKILL.exe — fatal nuisance</h2>
+          <span class="text-2xl font-black" aria-hidden="true">×</span>
+        </div>
+        <p class="border-4 border-black bg-[#f5f0de] p-4 text-sm font-bold leading-relaxed">Error: Please enter your mother's maiden name to buffer the next 3 seconds of audio.</p>
+        <button id="error-ok" type="button" class="mt-5 border-4 border-black bg-black px-5 py-2 text-sm font-black uppercase text-white hover:bg-[#e7ff00] hover:text-black">Fine, whatever</button>
+      </div>
+    </div>
+    <div id="fake-alert" class="pointer-events-none fixed right-4 top-4 z-[60] hidden max-w-xs border-4 border-black bg-[#e7ff00] p-4 text-xs font-black uppercase shadow-[6px_6px_0_#ff2c91]" role="status" aria-live="assertive">☠ SYSTEM WARNING ☠<br />Your consent has been accepted. Allegedly.</div>
+    <div id="toast" class="pointer-events-none fixed bottom-4 left-1/2 z-[60] hidden -translate-x-1/2 border-4 border-black bg-[#ff2c91] px-4 py-3 text-xs font-black uppercase shadow-[5px_5px_0_#171717]" role="status"></div>
+    <div id="surrender-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 p-4" role="alertdialog" aria-modal="true" aria-labelledby="surrender-title">
+      <div class="w-full max-w-sm border-4 border-black bg-[#e7ff00] p-6 shadow-[8px_8px_0_#ff2c91]">
+        <h2 id="surrender-title" class="mb-3 text-2xl font-black uppercase">Nice try, robot.</h2>
+        <p class="mb-5 text-xs font-bold uppercase">The ₹8,000 was imaginary. Your surrender has also been rejected.</p>
+        <button id="surrender-close" type="button" class="border-4 border-black bg-black px-4 py-2 text-xs font-black uppercase text-white">Return to the test</button>
+      </div>
+    </div>
+
+    <script>
+      const passwordInput = document.querySelector("#password");
+      const usernameInput = document.querySelector("#username");
+      const loginButton = document.querySelector("#login-button");
+      const loginForm = document.querySelector("#login-form");
+      const rulesList = document.querySelector("#rules-list");
+      const ruleCount = document.querySelector("#rule-count");
+      const frenchWeekday = new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(new Date());
+      const isPrime = number => {
+        if (number < 2) return false;
+        for (let divisor = 2; divisor <= Math.sqrt(number); divisor += 1) {
+          if (number % divisor === 0) return false;
+        }
+        return true;
+      };
+      const rules = [
+        { text: "At least 12 characters long", test: value => Array.from(value).length >= 12 },
+        { text: "Must include an uppercase letter", test: value => /[A-Z]/.test(value) },
+        { text: "Must include a lowercase letter", test: value => /[a-z]/.test(value) },
+        { text: "Must include a number", test: value => /\d/.test(value) },
+        { text: "Must include punctuation (!@#$%)", test: value => /[!@#$%]/.test(value) },
+        { text: "Vowel count must be a prime number", test: value => isPrime((value.match(/[aeiou]/gi) || []).length) },
+        { text: "All digits must add up to exactly 7", test: value => [...value].filter(char => /\d/.test(char)).reduce((sum, digit) => sum + Number(digit), 0) === 7 },
+        { text: "Must contain the Roman numeral IX", test: value => value.includes("IX") },
+        { text: "Must include the word “pain”", test: value => value.includes("pain") },
+        { text: "Must include the exact emoji: 💀", test: value => value.includes("💀") },
+        { text: `Must contain today's weekday in French: ${frenchWeekday}`, test: value => value.toLocaleLowerCase().includes(frenchWeekday) },
+        { text: "Total length must be a prime number", test: value => {
+          const length = Array.from(value).length;
+          return isPrime(length);
+        } }
+      ];
+      const initialVisibleRuleCount = 4;
+      let visibleRuleCount = initialVisibleRuleCount;
+      let spawnWave = 0;
+      const previouslyValid = Array(rules.length).fill(false);
+      const ruleItems = rules.map((rule, index) => {
+        const item = document.createElement("li");
+        item.className = `flex items-start gap-2 text-[11px] font-bold leading-snug sm:text-xs${index >= initialVisibleRuleCount ? " hidden" : ""}`;
+        item.innerHTML = `<span class="rule-status mt-px inline-flex h-4 w-4 shrink-0 items-center justify-center border-2 border-black bg-white text-[9px]" aria-hidden="true">×</span><span class="rule-copy"><b class="mr-1">${String(index + 1).padStart(2, "0")}.</b>${rule.text}</span>`;
+        rulesList.append(item);
+        return item;
+      });
+
+      function validatePassword() {
+        const value = passwordInput.value;
+        let passed = 0;
+        let revealedNewRule = true;
+        while (revealedNewRule) {
+          revealedNewRule = false;
+          const newlySatisfied = [];
+          for (let index = 0; index < visibleRuleCount; index += 1) {
+            const valid = rules[index].test(value);
+            if (valid) {
+              passed += 1;
+              if (!previouslyValid[index]) newlySatisfied.push(index);
+            }
+            previouslyValid[index] = valid;
+            const status = ruleItems[index].querySelector(".rule-status");
+            const copy = ruleItems[index].querySelector(".rule-copy");
+            status.textContent = valid ? "✓" : "×";
+            status.classList.toggle("is-valid", valid);
+            copy.classList.toggle("is-valid", valid);
+          }
+          for (const index of newlySatisfied) {
+            if (visibleRuleCount >= rules.length) break;
+            const rulesToReveal = spawnWave % 2 === 0 ? 1 : 2;
+            spawnWave += 1;
+            const nextVisibleRuleCount = Math.min(rules.length, visibleRuleCount + rulesToReveal);
+            while (visibleRuleCount < nextVisibleRuleCount) {
+              ruleItems[visibleRuleCount].classList.remove("hidden");
+              visibleRuleCount += 1;
+              revealedNewRule = true;
+            }
+          }
+        }
+        passed = previouslyValid.slice(0, visibleRuleCount).filter(Boolean).length;
+        ruleCount.textContent = `${passed} / ${visibleRuleCount} appeased · ${visibleRuleCount} / ${rules.length} revealed`;
+        loginButton.disabled = passed !== visibleRuleCount || usernameInput.value.trim().length === 0;
+      }
+
+      passwordInput.addEventListener("input", validatePassword);
+      usernameInput.addEventListener("input", validatePassword);
+      loginForm.addEventListener("submit", event => {
+        event.preventDefault();
+        validatePassword();
+        if (loginButton.disabled) return;
+        document.querySelector("#login-screen").classList.add("hidden");
+        document.querySelector("#captcha-screen").classList.remove("hidden");
+        createCaptchaGrid();
+        document.querySelector("#captcha-title").focus();
+      });
+
+      function enterPlayer() {
+        document.querySelector("#captcha-screen").classList.add("hidden");
+        document.querySelector("#player-screen").classList.remove("hidden");
+        document.querySelector("#welcome-name").textContent = `Welcome, ${usernameInput.value.trim()}`;
+        document.querySelector("#cookie-banner").classList.remove("hidden");
+        initializeVolumeControl();
+        placeTeleportButton();
+      }
+
+      const captchaGrid = document.querySelector("#captcha-grid");
+      function createCaptchaGrid() {
+        if (captchaGrid.childElementCount) return;
+        for (let index = 0; index < 9; index += 1) {
+          const tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "captcha-tile";
+          tile.setAttribute("aria-pressed", "false");
+          tile.setAttribute("aria-label", `Monday morning photo ${index + 1}`);
+          tile.dataset.sadness = String(index === 4);
+          tile.innerHTML = `<span class="captcha-wall" aria-hidden="true"><span class="captcha-clock"></span>${index === 4 ? '<span class="captcha-marker"></span>' : ""}</span>`;
+          tile.addEventListener("click", () => {
+            const selected = tile.getAttribute("aria-pressed") === "true";
+            tile.setAttribute("aria-pressed", String(!selected));
+            tile.classList.toggle("is-selected", !selected);
+            document.querySelector("#captcha-error").textContent = "";
+          });
+          captchaGrid.append(tile);
+        }
+      }
+
+      document.querySelector("#verify-humanity").addEventListener("click", () => {
+        const selectedTiles = [...captchaGrid.querySelectorAll('[aria-pressed="true"]')];
+        if (selectedTiles.length === 1 && selectedTiles[0].dataset.sadness === "true") {
+          enterPlayer();
+          return;
+        }
+
+        const error = document.querySelector("#captcha-error");
+        const card = document.querySelector("#captcha-card");
+        error.textContent = "A robot would definitely click that. Try again.";
+        error.classList.remove("captcha-error");
+        card.classList.remove("captcha-shake");
+        void card.offsetWidth;
+        error.classList.add("captcha-error");
+        card.classList.add("captcha-shake");
+        for (const tile of selectedTiles) {
+          tile.setAttribute("aria-pressed", "false");
+          tile.classList.remove("is-selected");
+        }
+        const tiles = [...captchaGrid.children];
+        for (let index = tiles.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [tiles[index], tiles[swapIndex]] = [tiles[swapIndex], tiles[index]];
+        }
+        tiles.forEach(tile => captchaGrid.append(tile));
+      });
+
+      document.querySelector("#robot-surrender").addEventListener("click", () => {
+        const modal = document.querySelector("#surrender-modal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.querySelector("#surrender-close").focus();
+      });
+      document.querySelector("#surrender-close").addEventListener("click", () => {
+        const modal = document.querySelector("#surrender-modal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        document.querySelector("#robot-surrender").focus();
+      });
+
+      const playButton = document.querySelector("#play-button");
+      const playerCard = document.querySelector("#player-screen > .grid > section");
+      let audioContext;
+      let masterGain;
+      let oscillator;
+      let harmonyOscillator;
+      let musicTimer;
+      let musicNoteIndex = 0;
+      let isPlaying = false;
+      let desiredGain = 0.08;
+      const musicNotes = [220, 277.18, 329.63, 293.66, 246.94, 196];
+      function placeTeleportButton() {
+        const bounds = playerCard.getBoundingClientRect();
+        const buttonBounds = playButton.getBoundingClientRect();
+        const maxLeft = Math.max(0, playerCard.clientWidth - buttonBounds.width);
+        const maxTop = Math.max(0, playerCard.clientHeight - buttonBounds.height);
+        playButton.style.left = `${Math.random() * maxLeft}px`;
+        playButton.style.top = `${Math.random() * maxTop}px`;
+        playButton.style.transform = "none";
+      }
+      function teleportAway() {
+        if (!document.querySelector("#player-screen").classList.contains("hidden")) placeTeleportButton();
+      }
+      setInterval(teleportAway, 3000);
+      playerCard.addEventListener("pointermove", event => {
+        const bounds = playButton.getBoundingClientRect();
+        const centerX = bounds.left + bounds.width / 2;
+        const centerY = bounds.top + bounds.height / 2;
+        if (Math.hypot(event.clientX - centerX, event.clientY - centerY) < 50) teleportAway();
+      });
+
+      async function togglePlayback() {
+        if (!audioContext) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) {
+            showToast("Your browser cannot play this extremely sophisticated noise.");
+            return;
+          }
+          audioContext = new AudioContextClass();
+          masterGain = audioContext.createGain();
+          masterGain.gain.value = 0;
+          oscillator = audioContext.createOscillator();
+          harmonyOscillator = audioContext.createOscillator();
+          const harmonyGain = audioContext.createGain();
+          oscillator.type = "triangle";
+          oscillator.frequency.value = musicNotes[0];
+          harmonyOscillator.type = "sine";
+          harmonyOscillator.frequency.value = musicNotes[0] * 2;
+          harmonyGain.gain.value = 0.16;
+          oscillator.connect(masterGain);
+          harmonyOscillator.connect(harmonyGain);
+          harmonyGain.connect(masterGain);
+          masterGain.connect(audioContext.destination);
+          oscillator.start();
+          harmonyOscillator.start();
+        }
+        if (!isPlaying) {
+          if (audioContext.state === "suspended") await audioContext.resume();
+          isPlaying = true;
+          masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+          masterGain.gain.setTargetAtTime(desiredGain, audioContext.currentTime, 0.025);
+          playButton.textContent = "Ⅱ Pause";
+          startMusicSequence();
+          startProgress();
+        } else {
+          isPlaying = false;
+          masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+          masterGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.025);
+          playButton.textContent = "▶ Play";
+          stopMusicSequence();
+          stopProgress();
+          window.setTimeout(() => {
+            if (!isPlaying && audioContext.state === "running") audioContext.suspend();
+          }, 150);
+        }
+      }
+      playButton.addEventListener("click", togglePlayback);
+
+      function startMusicSequence() {
+        stopMusicSequence();
+        const playNote = () => {
+          if (!isPlaying || !audioContext) return;
+          const note = musicNotes[musicNoteIndex % musicNotes.length];
+          musicNoteIndex += 1;
+          oscillator.frequency.setTargetAtTime(note, audioContext.currentTime, 0.035);
+          harmonyOscillator.frequency.setTargetAtTime(note * 2, audioContext.currentTime, 0.035);
+        };
+        playNote();
+        musicTimer = setInterval(playNote, 360);
+      }
+      function stopMusicSequence() {
+        clearInterval(musicTimer);
+      }
+
+      let progressTimer;
+      let secondsPlayed = 0;
+      function startProgress() {
+        stopProgress();
+        progressTimer = setInterval(() => {
+          secondsPlayed += 1;
+          document.querySelector("#elapsed").textContent = `00:${String(secondsPlayed % 60).padStart(2, "0")}`;
+          document.querySelector("#progress-bar").style.width = `${9 + (secondsPlayed % 88)}%`;
+        }, 1000);
+      }
+      function stopProgress() {
+        clearInterval(progressTimer);
+      }
+
+      const plank = document.querySelector("#plank");
+      const plankStage = document.querySelector("#plank-stage");
+      const nail = document.querySelector("#nail");
+      const volumeReadout = document.querySelector("#volume-readout");
+      let actualVolume = 1;
+      let tiltResetTimer;
+      function updateVolumeAudio() {
+        desiredGain = actualVolume * 0.42;
+        if (isPlaying && masterGain && audioContext) {
+          masterGain.gain.setTargetAtTime(desiredGain, audioContext.currentTime, 0.08);
+        }
+      }
+      function initializeVolumeControl() {
+        actualVolume = 1;
+        clearTimeout(tiltResetTimer);
+        nail.style.left = "100%";
+        plank.style.setProperty("--log-tilt", "0deg");
+        plank.setAttribute("aria-valuenow", "100");
+        volumeReadout.textContent = "100% (?)";
+        updateVolumeAudio();
+      }
+      function rollLogFromClick(clientX) {
+        const bounds = plankStage.getBoundingClientRect();
+        const position = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
+        const tipsRight = position >= 0.5;
+        const targetVolume = tipsRight
+          ? 0.78 + Math.random() * 0.17
+          : 0.08 + Math.random() * 0.16;
+
+        clearTimeout(tiltResetTimer);
+        plank.style.setProperty("--log-tilt", tipsRight ? "14deg" : "-14deg");
+        actualVolume = targetVolume;
+        const percent = Math.round(actualVolume * 100);
+        nail.style.left = `${percent}%`;
+        volumeReadout.textContent = `${Math.max(0, Math.min(100, percent + Math.floor(Math.random() * 31) - 15))}% (?)`;
+        plank.setAttribute("aria-valuenow", String(percent));
+        updateVolumeAudio();
+        tiltResetTimer = window.setTimeout(() => plank.style.setProperty("--log-tilt", "0deg"), 650);
+      }
+      plankStage.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        rollLogFromClick(event.clientX);
+      });
+      plank.addEventListener("keydown", event => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const bounds = plankStage.getBoundingClientRect();
+        const increment = bounds.width * (event.key === "ArrowRight" ? 0.1 : -0.1);
+        rollLogFromClick(bounds.left + actualVolume * bounds.width + increment);
+      });
+
+      const cookieSubBanners = document.querySelector("#cookie-sub-banners");
+      let rejectionCount = 0;
+      document.querySelector("#reject-cookies").addEventListener("click", () => {
+        rejectionCount += 1;
+        for (let index = 0; index < 2; index += 1) {
+          const banner = document.createElement("div");
+          banner.className = "border-4 border-black bg-[#f5f0de] p-3 text-[10px] font-black uppercase";
+          banner.textContent = index === 0
+            ? `Rejection form ${String(rejectionCount).padStart(2, "0")}: Are you sure you don't want cookies we don't have?`
+            : "Your choice has been noted and immediately ignored.";
+          cookieSubBanners.append(banner);
+        }
+        document.querySelector("#cookie-banner").scrollTop = document.querySelector("#cookie-banner").scrollHeight;
+      });
+
+      let skullTaps = 0;
+      document.querySelector("#skull-exit").addEventListener("click", () => {
+        skullTaps += 1;
+        if (skullTaps < 5) return;
+        document.querySelector("#cookie-banner").classList.add("hidden");
+        showToast("The skull has released you. Try not to enjoy yourself.");
+      });
+
+      document.querySelector("#accept-cookies").addEventListener("click", () => {
+        const alert = document.querySelector("#fake-alert");
+        alert.classList.remove("hidden");
+        alert.classList.add("jitter");
+        window.setTimeout(() => {
+          alert.classList.add("hidden");
+          alert.classList.remove("jitter");
+        }, 3000);
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            const context = new AudioContextClass();
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(880, context.currentTime);
+            oscillator.frequency.setValueAtTime(587, context.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.12, context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.35);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.35);
+            oscillator.addEventListener("ended", () => context.close());
+          }
+        } catch (error) {
+          console.warn("The fake consent alert sound could not play.", error);
+        }
+      });
+
+      function showToast(message) {
+        const toast = document.querySelector("#toast");
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+        window.setTimeout(() => toast.classList.add("hidden"), 2600);
+      }
+
+      let loadingTimeout;
+      let loadingInterval;
+      document.querySelector("#next-track").addEventListener("click", () => {
+        const loadingModal = document.querySelector("#loading-modal");
+        const errorModal = document.querySelector("#error-modal");
+        const percent = document.querySelector("#loading-percent");
+        loadingModal.classList.remove("hidden");
+        loadingModal.classList.add("flex");
+        let current = 0;
+        percent.textContent = "0%";
+        loadingInterval = window.setInterval(() => {
+          current = Math.min(99, current + 13);
+          percent.textContent = `${current}%`;
+        }, 600);
+        loadingTimeout = window.setTimeout(() => {
+          clearInterval(loadingInterval);
+          loadingModal.classList.add("hidden");
+          loadingModal.classList.remove("flex");
+          errorModal.classList.remove("hidden");
+          errorModal.classList.add("flex");
+          document.querySelector("#error-ok").focus();
+        }, 10000);
+      });
+      document.querySelector("#error-ok").addEventListener("click", () => {
+        const errorModal = document.querySelector("#error-modal");
+        errorModal.classList.add("hidden");
+        errorModal.classList.remove("flex");
+      });
+
+      document.querySelector("#mood").addEventListener("click", event => {
+        const moods = ["Mildly alarmed", "Deeply crunchy", "Wood-adjacent", "Buffering emotionally", "IX out of ten pain"];
+        event.currentTarget.textContent = moods[Math.floor(Math.random() * moods.length)];
+      });
+    </script>
+  </body>
+</html>
