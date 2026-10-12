@@ -16,28 +16,29 @@
 ### 2. The Gaslighting Captcha
 *A human-verification puzzle forcing users to hunt for a single hidden correct tile among trolling options.*
 
-<img src="Screenshot 2026-10-13 at 12.37.36 AM.png" width="800">
+![Captcha](./2nd.png)
 
 ---
 
 ### 3. The Fake Cookie Banner of Despair
 *A massive, unclosable consent banner mocking the user's lack of options.*
 
-<img src="Screenshot 2026-10-13 at 12.38.09 AM.png" width="800">
+![Banner](./3rd.png)
 
 ---
 
 ### 4. The Tilting Wooden Volume Bar & Teleporting Pause
 *A physics-defying wooden seesaw that starts at max volume alongside unskippable tracks and a malicious pause button.*
 
-<img src="Screenshot 2026-10-13 at 12.38.23 AM.png" width="800">
+![vol rocker](./4th.png)
 
 ---
 
 ### 5. The Dead-End Loading Spinner
 *When trying to change tracks, users are greeted with a realistic loading bar stuck at 99%.*
 
-<img src="Screenshot 2026-10-13 at 12.38.34 AM.png" width="800">
+![Ded-spinner](./5th.png)
+
 
 ---
 
