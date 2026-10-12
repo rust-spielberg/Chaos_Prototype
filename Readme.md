@@ -9,7 +9,7 @@
 ### 1. The Hydra-Password Gauntlet
 *Users enter a fake name and face an escalating password screen with dynamically spawning rules.*
 
-(./1st.png)
+![Landing Page](./1st.png)
 
 ---
 
