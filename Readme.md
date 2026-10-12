@@ -9,35 +9,35 @@
 ### 1. The Hydra-Password Gauntlet
 *Users enter a fake name and face an escalating password screen with dynamically spawning rules.*
 
-<img src="https://raw.githubusercontent.com/rust-spielberg/Chaos_Prototype/master/visuals/Screenshot%202026-10-13%20at%2012.36.52%20AM.png" width="800">
+<img src="Screenshot 2026-10-13 at 12.36.52 AM.png" width="800">
 
 ---
 
 ### 2. The Gaslighting Captcha
 *A human-verification puzzle forcing users to hunt for a single hidden correct tile among trolling options.*
 
-<img src="https://raw.githubusercontent.com/rust-spielberg/Chaos_Prototype/master/visuals/Screenshot%202026-10-13%20at%2012.37.36%20AM.png" width="800">
+<img src="Screenshot 2026-10-13 at 12.37.36 AM.png" width="800">
 
 ---
 
 ### 3. The Fake Cookie Banner of Despair
 *A massive, unclosable consent banner mocking the user's lack of options.*
 
-<img src="https://raw.githubusercontent.com/rust-spielberg/Chaos_Prototype/master/visuals/Screenshot%202026-10-13%20at%2012.38.09%20AM.png" width="800">
+<img src="Screenshot 2026-10-13 at 12.38.09 AM.png" width="800">
 
 ---
 
 ### 4. The Tilting Wooden Volume Bar & Teleporting Pause
 *A physics-defying wooden seesaw that starts at max volume alongside unskippable tracks and a malicious pause button.*
 
-<img src="https://raw.githubusercontent.com/rust-spielberg/Chaos_Prototype/master/visuals/Screenshot%202026-10-13%20at%2012.38.23%20AM.png" width="800">
+<img src="Screenshot 2026-10-13 at 12.38.23 AM.png" width="800">
 
 ---
 
 ### 5. The Dead-End Loading Spinner
 *When trying to change tracks, users are greeted with a realistic loading bar stuck at 99%.*
 
-<img src="https://raw.githubusercontent.com/rust-spielberg/Chaos_Prototype/master/visuals/Screenshot%202026-10-13%20at%2012.38.34%20AM.png" width="800">
+<img src="Screenshot 2026-10-13 at 12.38.34 AM.png" width="800">
 
 ---
 
@@ -47,3 +47,4 @@
 2. Run a local server:
    ```bash
    npx serve .
+
