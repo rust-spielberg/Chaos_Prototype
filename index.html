@@ -253,7 +253,7 @@
           </div>
           <div class="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-y-4 border-black py-3">
             <h2 class="text-xl font-black uppercase sm:text-2xl">You have plenty of reasons to give up.</h2>
-            <span id="rule-count" class="bg-black px-2 py-1 text-xs font-black uppercase text-[#e7ff00]" aria-live="polite">0 / 4 appeased · 4 / 12 revealed</span>
+            <span id="rule-count" class="bg-black px-2 py-1 text-xs font-black uppercase text-[#e7ff00]" aria-live="polite">0 / 4 appeased</span>
           </div>
           <ol id="rules-list" class="grid gap-x-8 gap-y-2 sm:grid-cols-2" aria-live="polite"></ol>
           <div class="mt-7 flex flex-col items-start gap-3 border-t-4 border-black pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -489,70 +489,6 @@
         return item;
       });
 
-      let ultronAudioContext;
-      function playUltronLaugh() {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) return;
-        if (!ultronAudioContext) {
-          ultronAudioContext = new AudioContextClass();
-        }
-        if (ultronAudioContext.state === "suspended") ultronAudioContext.resume();
-        const ctx = ultronAudioContext;
-        const now = ctx.currentTime;
-        const master = ctx.createGain();
-        master.gain.value = 0.55;
-        master.connect(ctx.destination);
-
-        const bufferSize = ctx.sampleRate * 1.4;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = "bandpass";
-        noiseFilter.Q.value = 1.2;
-        noiseFilter.frequency.setValueAtTime(900, now);
-        noiseFilter.frequency.exponentialRampToValueAtTime(300, now + 1.2);
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.0001, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
-        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.3);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(master);
-        noise.start(now);
-        noise.stop(now + 1.4);
-
-        const osc = ctx.createOscillator();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(420, now);
-        osc.frequency.exponentialRampToValueAtTime(180, now + 0.5);
-        osc.frequency.exponentialRampToValueAtTime(70, now + 1.1);
-        const oscGain = ctx.createGain();
-        oscGain.gain.setValueAtTime(0.0001, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.5, now + 0.06);
-        oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-        osc.connect(oscGain);
-        oscGain.connect(master);
-        osc.start(now);
-        osc.stop(now + 1.3);
-
-        const sub = ctx.createOscillator();
-        sub.type = "square";
-        sub.frequency.setValueAtTime(110, now);
-        sub.frequency.exponentialRampToValueAtTime(45, now + 1.1);
-        const subGain = ctx.createGain();
-        subGain.gain.setValueAtTime(0.0001, now);
-        subGain.gain.exponentialRampToValueAtTime(0.35, now + 0.08);
-        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.15);
-        sub.connect(subGain);
-        subGain.connect(master);
-        sub.start(now);
-        sub.stop(now + 1.2);
-      }
-
       const ultronModal = document.querySelector("#ultron-modal");
       const ultronClose = document.querySelector("#ultron-close");
       const ultronRuleEl = document.querySelector("#ultron-rule");
@@ -563,35 +499,18 @@
         ultronClose.style.left = `${rect.width - btnRect.width - 14}px`;
         ultronClose.style.top = `${rect.height - btnRect.height - 14}px`;
       }
-      function speakUltronLine() {
-        const synth = window.speechSynthesis;
-        if (!synth) return;
-        synth.cancel();
-        const utter = new SpeechSynthesisUtterance("You are unbearably naive.");
-        utter.rate = 0.6;
-        utter.pitch = 0.2;
-        utter.volume = 1;
-        const voices = synth.getVoices();
-        const deepVoice = voices.find((v) => /male|google uk english male|daniel|alex|fred/i.test(v.name));
-        if (deepVoice) utter.voice = deepVoice;
-        synth.speak(utter);
-      }
       function fireUltronPopup(ruleNumber) {
         ultronRuleEl.textContent = String(ruleNumber);
         ultronModal.classList.remove("hidden");
         ultronModal.classList.add("flex");
         positionUltronClose();
-        try { playUltronLaugh(); } catch (err) {}
-        try { speakUltronLine(); } catch (err) {}
+        const ultronAudio = new Audio("assets/ultron_naive.mp3");
+        ultronAudio.play().catch(error => console.warn("Ultron milestone audio could not play.", error));
       }
       ultronClose.addEventListener("click", () => {
-        try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (err) {}
         ultronModal.classList.add("hidden");
         ultronModal.classList.remove("flex");
       });
-      if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = () => {};
-      }
 
       function validatePassword() {
         const value = passwordInput.value;
@@ -627,7 +546,7 @@
           }
         }
         passed = previouslyValid.slice(0, visibleRuleCount).filter(Boolean).length;
-        ruleCount.textContent = `${passed} / ${visibleRuleCount} appeased · ${visibleRuleCount} / ${rules.length} revealed`;
+        ruleCount.textContent = `${passed} / ${visibleRuleCount} appeased`;
         loginButton.disabled = passed !== visibleRuleCount || usernameInput.value.trim().length === 0;
       }
 
