@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#e7ff00" />
-    <title>Audiokill — bad taste, loud music</title>
+    <meta name="description" content="A beautifully broken cinema booking experience where selecting seat F12 is an extreme sport." />
+    <title>CINE-CHAOS: THE ULTIMATE SEAT SELECTION EXPERIENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
@@ -125,6 +126,60 @@
       }
       .captcha-error { animation: captcha-flash .42s steps(2, end) 3; }
       @keyframes captcha-flash { 50% { color: #ff0000; } }
+      .seat-map {
+        min-width: 830px;
+        display: grid;
+        grid-template-columns: 32px repeat(20, minmax(32px, 1fr));
+        gap: 5px;
+      }
+      .seat-row {
+        display: contents;
+      }
+      .seat-row > .seat-row-label,
+      .seat-row > .seat {
+        animation: seat-drift 4.5s ease-in-out infinite;
+        animation-delay: var(--row-delay, 0s);
+      }
+      @keyframes seat-drift {
+        0%, 100% { translate: 0 0; }
+        47% { translate: 2px 1px; }
+        53% { translate: -2px -1px; }
+      }
+      .seat {
+        position: relative;
+        min-height: 36px;
+        border: 2px solid #171717;
+        background: #f5f0de;
+        padding: 4px 1px;
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1;
+        transition: transform .12s ease-out, background-color .12s;
+      }
+      .seat:hover { z-index: 2; background: #e7ff00; }
+      .seat-row-label {
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .seat.is-decoy { background: #ff2c91; font-size: 8px; }
+      .seat.is-selected { outline: 4px solid #171717; outline-offset: 2px; background: #e7ff00; }
+      .seat.is-target {
+        border: 3px dashed #ff2c91;
+        background: #fff7c2;
+        animation: none !important;
+        transform: none !important;
+      }
+      .seat.is-target:hover { background: #e7ff00; }
+      .seat-map-shake { animation: captcha-shake .42s cubic-bezier(.36,.07,.19,.97) both; }
+      .seat-confirm-panel { position: relative; overflow: hidden; }
+      .seat-confirm-actions { display: flex; min-height: 64px; align-items: center; justify-content: center; gap: 18px; }
+      .seat-confirm-actions button { transition: none; }
+      .survivor-confetti { position: fixed; z-index: 100; top: -16px; width: 10px; height: 16px; pointer-events: none; animation: confetti-fall var(--fall-time, 3s) linear forwards; }
+      @keyframes confetti-fall {
+        to { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(900deg); opacity: .9; }
+      }
       .skull-easter-egg {
         min-width: 24px;
         min-height: 24px;
@@ -232,14 +287,14 @@
   </head>
   <body class="selection:bg-pink-400">
     <header class="flex items-center justify-between border-b-4 border-black bg-black px-4 py-3 text-[#e7ff00] sm:px-8">
-      <a class="text-xl font-black uppercase tracking-[-.08em] sm:text-2xl" href="#" aria-label="Audiokill home">AUDIO<span class="text-[#ff2c91]">KILL</span></a>
-      <span class="text-right text-[10px] font-bold uppercase tracking-[.18em] sm:text-xs">Bad taste. Loud music.<br />Zero good decisions.</span>
+      <a class="text-xl font-black uppercase tracking-[-.08em] sm:text-2xl" href="#" aria-label="CINE-CHAOS: The Ultimate Seat Selection Experience">CINE<span class="text-[#ff2c91]">-CHAOS</span></a>
+      <span class="max-w-2xl text-right text-[10px] font-bold uppercase tracking-[.08em] sm:text-xs">A beautifully broken cinema booking experience where selecting seat F12 is an extreme sport.</span>
     </header>
 
     <main class="mx-auto min-h-[calc(100vh-60px)] max-w-7xl px-4 py-8 sm:px-8 sm:py-12">
       <section id="login-screen" class="mx-auto max-w-3xl">
         <div class="mb-6 inline-block -rotate-2 border-4 border-black bg-[#ff2c91] px-3 py-1 text-xs uppercase shadow-[4px_4px_0_#171717]">Certified bad design / No. 001</div>
-        <h1 class="poster-shadow mb-8 text-6xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-8xl">Enter<br />the noise<span class="text-[#ff2c91]">!</span></h1>
+        <h1 class="poster-shadow mb-8 text-5xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-7xl">CINE-CHAOS:<br />The ultimate seat selection experience<span class="text-[#ff2c91]">!</span></h1>
         <form id="login-form" class="hard-shadow border-4 border-black bg-[#f5f0de] p-5 sm:p-8" novalidate>
           <div class="mb-6 grid gap-4 sm:grid-cols-2">
             <label class="block text-xs font-black uppercase tracking-widest" for="username">
@@ -281,11 +336,279 @@
         </div>
       </section>
 
+      <section id="cinema-hub" class="mx-auto hidden max-w-7xl" aria-labelledby="cinema-hub-title">
+        <div class="mb-6">
+          <div class="mb-3 inline-block -rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">Movie screen selection / seven cinema complexes</div>
+          <h1 id="cinema-hub-title" tabindex="-1" class="poster-shadow text-5xl font-black uppercase leading-[.86] tracking-[-.07em] sm:text-7xl">Choose your movie screen.</h1>
+          <p id="cinema-hub-welcome" class="mt-4 inline-block border-4 border-black bg-[#f5f0de] px-3 py-2 text-xs font-black uppercase"></p>
+        </div>
+        <div id="cinema-directory" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <button type="button" data-cinema-id="1" class="hard-shadow min-h-40 border-4 border-black bg-[#f5f0de] p-5 text-left transition hover:-translate-y-1 hover:bg-[#ff2c91]">
+            <span class="text-[10px] font-black uppercase">Cinema 01 / open</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">PVR Despair Plaza</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Now showing: missing equipment</span>
+          </button>
+          <button type="button" data-cinema-id="2" class="hard-shadow min-h-40 border-4 border-black bg-[#f5f0de] p-5 text-left transition hover:-translate-y-1 hover:bg-[#ff2c91]">
+            <span class="text-[10px] font-black uppercase">Cinema 02 / open</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">Cineplex of Eternal Sorrow</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Now showing: structural regret</span>
+          </button>
+          <button type="button" data-cinema-id="3" class="hard-shadow min-h-40 border-4 border-black bg-[#f5f0de] p-5 text-left transition hover:-translate-y-1 hover:bg-[#ff2c91]">
+            <span class="text-[10px] font-black uppercase">Cinema 03 / open</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">Void Cinemas</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Now showing: almost loaded</span>
+          </button>
+          <button type="button" data-cinema-id="4" disabled aria-disabled="true" class="hard-shadow min-h-40 border-4 border-black bg-[#ded9c8] p-5 text-left opacity-70 disabled:cursor-not-allowed">
+            <span class="text-[10px] font-black uppercase">Cinema 04 / locked</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">F12 Multiplex</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Test cinemas 01–03 to unlock</span>
+          </button>
+          <button type="button" data-cinema-id="5" disabled aria-disabled="true" class="hard-shadow min-h-40 border-4 border-black bg-black p-5 text-left text-white opacity-70 disabled:cursor-not-allowed">
+            <span class="text-[10px] font-black uppercase text-[#ff2c91]">Cinema 05 / locked</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">VIP Secret Screen A</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Clear F12 to unlock</span>
+          </button>
+          <button type="button" data-cinema-id="6" disabled aria-disabled="true" class="hard-shadow min-h-40 border-4 border-black bg-black p-5 text-left text-white opacity-70 disabled:cursor-not-allowed">
+            <span class="text-[10px] font-black uppercase text-[#ff2c91]">Cinema 06 / locked</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">VIP Secret Screen B</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">Clear F12 to unlock</span>
+          </button>
+          <button type="button" data-cinema-id="7" disabled aria-disabled="true" class="hard-shadow min-h-40 border-4 border-black bg-black p-5 text-left text-white opacity-50 disabled:cursor-not-allowed">
+            <span class="text-[10px] font-black uppercase text-[#ff2c91]">Cinema 07 / sealed</span>
+            <span class="mt-3 block text-2xl font-black uppercase leading-none">The Lost Auditorium</span>
+            <span class="mt-3 block text-[10px] font-bold uppercase">No listing survives the archive</span>
+          </button>
+        </div>
+        <p id="cinema-hub-feedback" class="mt-6 min-h-12 border-4 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase" aria-live="assertive">Select a venue. Management accepts no responsibility for optimism.</p>
+      </section>
+
+      <section id="easy-seat-screen" class="mx-auto hidden max-w-4xl" aria-labelledby="easy-seat-title">
+        <div class="hard-shadow border-4 border-black bg-[#f5f0de] p-6 sm:p-10">
+          <div class="mb-4 inline-block border-2 border-black bg-[#e7ff00] px-2 py-1 text-[10px] font-black uppercase">F12 Multiplex / suspiciously convenient</div>
+          <h1 id="easy-seat-title" tabindex="-1" class="poster-shadow mb-4 text-5xl font-black uppercase leading-[.86] sm:text-7xl">Pick literally any seat.</h1>
+          <p class="mb-6 text-xs font-bold uppercase">No drifting. No decoys. No emotional damage. Select one seat to continue.</p>
+          <div id="easy-seat-grid" class="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 lg:grid-cols-12" aria-label="Simple seat selector, rows A through H and seats 1 through 12">
+          </div>
+          <p id="easy-seat-feedback" class="mt-4 min-h-5 text-xs font-black uppercase" aria-live="polite">No tricks detected. Yet.</p>
+          <button id="easy-seat-continue" type="button" disabled class="mt-5 border-4 border-black bg-black px-5 py-3 text-sm font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-[#e7ff00] enabled:text-black">Continue to payment →</button>
+        </div>
+      </section>
+
+      <section id="payment-screen" class="mx-auto hidden max-w-3xl" aria-labelledby="payment-title">
+        <div class="hard-shadow border-4 border-black bg-[#f5f0de] p-6 sm:p-10">
+          <div class="mb-4 inline-block border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] font-black uppercase">F12 Multiplex / secure-ish checkout</div>
+          <h1 id="payment-title" tabindex="-1" class="poster-shadow mb-3 text-5xl font-black uppercase leading-[.86] sm:text-7xl">Payment Gateway</h1>
+          <p class="mb-6 text-xs font-bold uppercase">Seat <strong id="payment-seat" class="bg-[#e7ff00] px-1"></strong> · Total ₹8,000 · Demo only; details stay in this browser.</p>
+          <form id="payment-form" class="grid gap-4" autocomplete="off">
+            <label class="text-xs font-black uppercase">Cardholder name
+              <input id="payment-name" name="payment-name" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold" placeholder="Name on card" />
+            </label>
+            <label class="text-xs font-black uppercase">Card number
+              <input id="payment-card" name="payment-card" inputmode="numeric" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold" placeholder="0000 0000 0000 0000" />
+            </label>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="text-xs font-black uppercase">Expiry
+                <input id="payment-expiry" name="payment-expiry" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold" placeholder="MM/YY" />
+              </label>
+              <label class="text-xs font-black uppercase">Security code
+                <input id="payment-cvv" name="payment-cvv" inputmode="numeric" class="mt-2 w-full border-4 border-black bg-white px-3 py-3 text-base font-bold" placeholder="CVV" />
+              </label>
+            </div>
+            <button type="submit" class="mt-3 border-4 border-black bg-[#e7ff00] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Pay Now — ₹8,000</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="checkout-crash" class="mx-auto hidden max-w-4xl" aria-labelledby="checkout-crash-title">
+        <div class="hard-shadow border-4 border-black bg-[#101b77] p-6 font-mono text-white sm:p-10">
+          <p class="mb-8 text-xs uppercase">CINE-CHAOS SYSTEM FAILURE / TRANSACTION HALTED</p>
+          <h1 id="checkout-crash-title" tabindex="-1" class="mb-5 text-3xl font-black uppercase sm:text-5xl">CRITICAL ERROR</h1>
+          <p class="mb-4 text-lg font-bold uppercase">Transaction intercepted by greed. Screen imploded.</p>
+          <p class="mb-8 text-xs leading-relaxed">No payment was processed. No card details were transmitted or saved. Your checkout has catastrophically succeeded at failing.</p>
+          <button id="crash-return-hub" type="button" class="border-4 border-white bg-[#e7ff00] px-5 py-3 text-sm font-black uppercase text-black shadow-[4px_4px_0_#ff2c91]">Reboot and return to cinema hub</button>
+        </div>
+      </section>
+
+      <div id="greed-certificate-modal" class="fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="greed-certificate-title">
+        <div class="hard-shadow my-auto w-full max-w-3xl border-4 border-black bg-[#e7ff00] p-5 sm:p-9">
+          <div id="certificate-content">
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+              <span class="border-4 border-black bg-[#ff2c91] px-3 py-2 text-[10px] font-black uppercase">Department of Unnecessary Revenue</span>
+              <span class="flex h-20 w-20 rotate-6 items-center justify-center rounded-full border-[5px] border-double border-black bg-[#ff2c91] text-center text-[9px] font-black uppercase leading-tight">Official<br />Greed<br />Seal</span>
+            </div>
+            <h1 id="greed-certificate-title" tabindex="-1" class="poster-shadow mb-5 text-4xl font-black uppercase leading-[.9] sm:text-6xl">Certificate of Financial Greed &amp; Survival</h1>
+            <div class="mb-6 grid gap-3 sm:grid-cols-2">
+              <p class="border-4 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Certificate holder: <span id="greed-certificate-holder">Valued Target</span></p>
+              <p class="border-4 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Greed score: <span id="greed-certificate-score"></span> / 100</p>
+              <p class="border-4 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Claimed transaction: ₹8,000</p>
+              <p class="border-4 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Survival status: technically upright</p>
+            </div>
+            <p class="mb-6 text-xs font-bold uppercase">Certified for approaching the payment gateway with unreasonable optimism. No payment was taken.</p>
+            <button id="download-survival-certificate" type="button" class="w-full border-4 border-black bg-[#ff2c91] px-4 py-4 text-sm font-black uppercase shadow-[5px_5px_0_#171717] hover:translate-y-1 hover:shadow-none sm:text-base">Download Survival Certificate (PDF)</button>
+            <div class="mt-4 flex flex-wrap justify-end gap-3">
+              <button id="dismiss-greed-certificate" type="button" class="border-4 border-black bg-[#f5f0de] px-4 py-3 text-xs font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Dismiss certificate</button>
+            </div>
+            <div id="certificate-download-progress" class="mt-6 hidden" aria-live="polite">
+              <div class="mb-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase"><span id="certificate-download-stage">Preparing 17 decorative signatures...</span><span id="certificate-download-percent">0.0%</span></div>
+              <div class="h-8 border-4 border-black bg-white p-1">
+                <div id="certificate-download-bar" class="h-full w-0 bg-[#ff2c91] transition-[width] duration-500"></div>
+              </div>
+              <p id="certificate-download-detail" class="mt-2 text-[9px] font-bold uppercase">Validating your completely fictional certificate.</p>
+            </div>
+          </div>
+          <div id="certificate-download-error" class="hidden border-4 border-black bg-[#ff2c91] p-5 sm:p-7" role="alert">
+            <p class="mb-3 text-[10px] font-black uppercase">Download stopped at 99.9%</p>
+            <h2 class="mb-4 text-2xl font-black uppercase leading-tight sm:text-4xl">CRITICAL ERROR: Certificate download imploded the experience.</h2>
+            <p class="mb-6 text-xs font-black uppercase">Resetting to the beginning. No data or payment was saved.</p>
+            <button id="restart-after-certificate-crash" type="button" class="border-4 border-black bg-[#e7ff00] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717]">Restart from the beginning</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="vip-screen" class="mx-auto hidden max-w-4xl" aria-labelledby="vip-screen-title">
+        <div class="hard-shadow border-4 border-black bg-[#e7ff00] p-6 sm:p-10">
+          <div class="mb-5 inline-block rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] font-black uppercase">Restricted screening / technically unlocked</div>
+          <h1 id="vip-screen-title" tabindex="-1" class="poster-shadow mb-5 text-5xl font-black uppercase leading-[.86] sm:text-7xl"></h1>
+          <p id="vip-screen-copy" class="mb-6 max-w-2xl border-4 border-black bg-[#f5f0de] p-4 text-sm font-black uppercase"></p>
+          <section id="vip-gauntlet" aria-labelledby="gauntlet-title">
+            <div class="mb-5 flex flex-wrap items-end justify-between gap-3 border-y-4 border-black py-4">
+              <div>
+                <p class="text-[10px] font-black uppercase">Three tests / one win required</p>
+                <h2 id="gauntlet-title" class="text-3xl font-black uppercase">F12 gatekeeper</h2>
+              </div>
+              <p id="gauntlet-score" class="border-4 border-black bg-[#ff2c91] px-3 py-2 text-xs font-black uppercase" aria-live="polite">0 / 3 cleared</p>
+            </div>
+            <div class="grid gap-4">
+              <article class="border-4 border-black bg-[#f5f0de] p-4">
+                <h3 class="mb-2 text-xl font-black uppercase">1. Memory Meltdown</h3>
+                <p class="mb-3 text-xs font-bold">Memorize seven items in five seconds. Recall at least five, separated by commas.</p>
+                <div id="memory-flash-items" class="mb-3 hidden border-4 border-black bg-[#ff2c91] p-3 text-center text-lg font-black uppercase tracking-wider" aria-live="assertive"></div>
+                <button id="memory-start-button" type="button" class="border-4 border-black bg-[#e7ff00] px-4 py-2 text-xs font-black uppercase">Start 5-second flash</button>
+                <form id="memory-recall-form" class="mt-3 hidden flex-wrap gap-2">
+                  <input id="memory-recall-input" autocomplete="off" class="min-w-0 flex-1 border-4 border-black bg-white px-3 py-2 text-sm font-bold" aria-label="Recall at least five remembered items" placeholder="Item one, item two, ..." />
+                  <button class="border-4 border-black bg-[#ff2c91] px-4 py-2 text-xs font-black uppercase" type="submit">Recall</button>
+                </form>
+                <p id="memory-challenge-status" class="mt-2 min-h-4 text-[10px] font-black uppercase" aria-live="polite">The list disappears after five seconds.</p>
+              </article>
+
+              <article class="border-4 border-black bg-[#f5f0de] p-4">
+                <h3 class="mb-2 text-xl font-black uppercase">2. Impossible Countdown</h3>
+                <p class="mb-3 text-xs font-bold">Start at 321 and count backward, skipping every multiple of three. Enter ten consecutive answers; any multiple of three resets you.</p>
+                <p class="mb-3 border-2 border-black bg-[#e7ff00] px-3 py-2 text-sm font-black uppercase">Starting number: 321 / next answer: <span id="countdown-next">320</span></p>
+                <form id="countdown-challenge-form" class="flex flex-wrap gap-2">
+                  <input id="countdown-challenge-input" inputmode="numeric" autocomplete="off" class="min-w-0 flex-1 border-4 border-black bg-white px-3 py-2 text-sm font-bold" aria-label="Next countdown number" />
+                  <button class="border-4 border-black bg-[#ff2c91] px-4 py-2 text-xs font-black uppercase" type="submit">Submit number</button>
+                </form>
+                <p id="countdown-challenge-status" class="mt-2 min-h-4 text-[10px] font-black uppercase" aria-live="polite">Next required: 320 · 0 / 10 consecutive.</p>
+              </article>
+
+              <article class="border-4 border-black bg-[#f5f0de] p-4">
+                <h3 class="mb-2 text-xl font-black uppercase">3. Inverted Arrow Reflex</h3>
+                <p class="mb-3 text-xs font-bold">Physics are reversed. Click the opposite direction shown. Clear eight prompts.</p>
+                <p class="mb-3 border-2 border-black bg-[#ff2c91] px-3 py-2 text-center text-lg font-black uppercase">Prompt: <span id="arrow-prompt">—</span> <span id="arrow-progress" class="ml-2 text-xs">0 / 8</span></p>
+                <div id="arrow-buttons" class="grid grid-cols-4 gap-2">
+                  <button type="button" data-arrow-choice="LEFT" class="border-4 border-black bg-white py-3 text-xs font-black uppercase hover:bg-[#e7ff00]">← Left</button>
+                  <button type="button" data-arrow-choice="UP" class="border-4 border-black bg-white py-3 text-xs font-black uppercase hover:bg-[#e7ff00]">↑ Up</button>
+                  <button type="button" data-arrow-choice="DOWN" class="border-4 border-black bg-white py-3 text-xs font-black uppercase hover:bg-[#e7ff00]">↓ Down</button>
+                  <button type="button" data-arrow-choice="RIGHT" class="border-4 border-black bg-white py-3 text-xs font-black uppercase hover:bg-[#e7ff00]">→ Right</button>
+                </div>
+                <p id="arrow-challenge-status" class="mt-2 min-h-4 text-[10px] font-black uppercase" aria-live="polite">Choose the opposite direction.</p>
+              </article>
+            </div>
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <button id="gauntlet-enter-map" type="button" disabled class="border-4 border-black bg-black px-5 py-3 text-sm font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-40 enabled:bg-[#e7ff00] enabled:text-black">Unlock the final F12 map</button>
+              <button id="vip-return-hub" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Back to cinema directory</button>
+            </div>
+            <p id="gauntlet-gate-status" class="mt-3 text-xs font-black uppercase" aria-live="polite">Choose any 1 of the 3 challenges to reveal the real seat map.</p>
+          </section>
+        </div>
+      </section>
+
+      <section id="seat-challenge" class="mx-auto hidden max-w-7xl" aria-labelledby="seat-title">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div class="mb-3 inline-block rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">Ticketing system / please suffer</div>
+            <h1 id="seat-title" class="poster-shadow text-5xl font-black uppercase leading-[.86] tracking-[-.07em] sm:text-7xl">Choose your seat.</h1>
+          </div>
+          <p id="seat-welcome" class="border-4 border-black bg-[#f5f0de] px-3 py-2 text-xs font-black uppercase"></p>
+        </div>
+        <div id="seat-map-card" class="hard-shadow border-4 border-black bg-[#f5f0de] p-4 sm:p-7">
+          <p class="mb-4 text-xs font-black uppercase sm:text-sm">Select a seat, then confirm your choice. Only <span class="bg-[#e7ff00] px-1">F12</span> earns the victory.</p>
+          <div class="mb-5 border-x-4 border-t-4 border-black bg-black py-2 text-center text-[10px] font-black uppercase tracking-[.5em] text-[#e7ff00]">Screen / it's behind you</div>
+          <div class="overflow-x-auto border-2 border-black bg-[#ded9c8] p-3">
+            <div id="seat-map" class="seat-map" aria-label="Cinema seats, rows A through J"></div>
+          </div>
+          <p id="seat-feedback" class="mt-5 min-h-6 text-center text-xs font-black uppercase text-[#b00045]" aria-live="assertive"></p>
+          <div class="mt-3 flex flex-wrap justify-center gap-4 text-[9px] font-black uppercase">
+            <span><i class="mr-1 inline-block h-3 w-3 border-2 border-black bg-[#f5f0de] align-middle"></i> Available</span>
+            <span><i class="mr-1 inline-block h-3 w-3 border-2 border-black bg-[#ff2c91] align-middle"></i> Suspicious</span>
+            <span><i class="mr-1 inline-block h-3 w-3 border-2 border-dashed border-[#ff2c91] bg-[#fff7c2] align-middle"></i> Absolutely ordinary</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="survivor-screen" class="mx-auto hidden max-w-4xl py-10 text-center" aria-labelledby="survivor-title">
+        <div class="hard-shadow border-4 border-black bg-[#e7ff00] p-7 sm:p-12">
+          <div class="mb-5 inline-block -rotate-2 border-2 border-black bg-[#ff2c91] px-3 py-1 text-xs font-black uppercase">System defeated / ticket generated</div>
+          <h1 id="survivor-title" tabindex="-1" class="poster-shadow mb-4 text-6xl font-black uppercase leading-[.8] sm:text-8xl">Victory!</h1>
+          <p class="mb-8 text-lg font-black uppercase">You cleared the gauntlet, found stable F12, and actually beat the system.</p>
+          <article class="mx-auto mb-8 max-w-2xl rotate-1 border-4 border-black bg-[#f5f0de] text-left shadow-[8px_8px_0_#ff2c91]" aria-label="Mock cinema ticket">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b-4 border-dashed border-black bg-[#ff2c91] p-4">
+              <div>
+                <p class="text-[10px] font-black uppercase tracking-[.25em]">CINE-CHAOS / Admit one</p>
+                <h2 class="text-2xl font-black uppercase sm:text-3xl">Ticket Generated</h2>
+              </div>
+              <span class="border-2 border-black bg-[#e7ff00] px-3 py-2 text-xs font-black uppercase">Official-ish</span>
+            </div>
+            <div class="grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:p-7">
+              <div class="grid gap-3 text-xs font-black uppercase">
+                <p>Movie <span class="mt-1 block border-2 border-black bg-white p-2 text-sm">Surviving Anti-Design</span></p>
+                <p>Venue <span class="mt-1 block border-2 border-black bg-white p-2 text-sm">F12 Multiplex · Screen 04</span></p>
+                <p>Cost <span class="mt-1 block border-2 border-black bg-white p-2 text-sm">Your last remaining brain cells</span></p>
+                <p>Ticket ID <span id="victory-ticket-id" class="mt-1 block border-2 border-black bg-white p-2 text-sm">CC-F12-000000</span></p>
+              </div>
+              <div class="flex min-h-36 flex-col items-center justify-center border-4 border-black bg-[#e7ff00] px-7 py-4 text-center">
+                <span class="text-[10px] font-black uppercase tracking-widest">Reserved seat</span>
+                <strong class="text-7xl font-black leading-none">F12</strong>
+                <span class="mt-2 border-t-2 border-black pt-2 text-[9px] font-black uppercase">The stable one</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap justify-between gap-2 border-t-4 border-dashed border-black p-4 text-[10px] font-black uppercase">
+              <span>Admit one survivor</span><span>No payment taken · Enjoy your victory</span>
+            </div>
+          </article>
+          <div class="mx-auto grid max-w-xl grid-cols-2 gap-3 text-left">
+            <p class="border-2 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Seats dodged: <span id="stat-dodges">0</span></p>
+            <p class="border-2 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Decoys rejected: <span id="stat-decoys">0</span></p>
+            <p class="border-2 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Challenges cleared: <span id="stat-challenges">0</span></p>
+            <p class="border-2 border-black bg-[#f5f0de] p-3 text-xs font-black uppercase">Patience remaining: 0%</p>
+          </div>
+          <p class="mt-6 text-[10px] font-black uppercase tracking-widest">This is a mock ticket. Your seat is victorious; no booking or payment occurred.</p>
+          <div class="mt-7 flex flex-wrap justify-center gap-3">
+            <button id="restart-horror" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Restart the horror</button>
+            <button id="survivor-return-hub" type="button" class="border-4 border-black bg-white px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Return to the cinema directory</button>
+          </div>
+        </div>
+        <div id="confetti-layer" aria-hidden="true"></div>
+      </section>
+
+      <div id="seat-confirm-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="seat-confirm-title">
+        <div id="seat-confirm-panel" class="seat-confirm-panel hard-shadow w-full max-w-lg border-4 border-black bg-[#f5f0de] p-6 sm:p-8">
+          <div class="mb-4 inline-block rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] font-black uppercase">Reservation almost certainly pending</div>
+          <h2 id="seat-confirm-title" class="mb-3 text-4xl font-black uppercase">Seat F12?</h2>
+          <p id="seat-confirm-copy" class="mb-5 text-xs font-bold uppercase">Only confirming F12 will complete the challenge.</p>
+          <div class="seat-confirm-actions">
+            <button id="seat-confirm-button" type="button" class="border-4 border-black bg-[#e7ff00] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717]">Confirm F12</button>
+            <button id="seat-cancel-button" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717]">Cancel</button>
+          </div>
+        </div>
+      </div>
+
       <section id="player-screen" class="hidden">
         <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div class="mb-2 inline-block rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">Now ruining your day</div>
-            <h1 class="poster-shadow text-6xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-8xl">Audiokill<span class="text-[#ff2c91]">.</span></h1>
+            <h1 class="poster-shadow text-6xl font-black uppercase leading-[.82] tracking-[-.08em] sm:text-8xl">CINE-CHAOS<span class="text-[#ff2c91]">.</span></h1>
           </div>
           <div id="welcome-name" class="border-4 border-black bg-[#f5f0de] px-3 py-2 text-xs font-black uppercase"></div>
         </div>
@@ -360,7 +683,7 @@
           <span class="text-xs font-black uppercase">Cookies? We don't even have a backend.</span>
         </div>
         <h2 id="cookie-title" class="mb-4 text-4xl font-black uppercase leading-[.9] tracking-tight sm:text-6xl">We value your<br /><span class="text-[#ff2c91]">inconvenience.<button id="skull-exit" type="button" class="skull-easter-egg ml-1 inline-flex items-center justify-center align-middle text-sm leading-none" aria-label="Skull" title="Tap five times to escape">☠</button></span></h2>
-        <p class="mb-6 max-w-2xl text-sm font-bold leading-relaxed">This very real-looking banner is a parody. Audiokill does not set cookies or track you. There is no close button because that would be good design.</p>
+        <p class="mb-6 max-w-2xl text-sm font-bold leading-relaxed">This very real-looking banner is a parody. CINE-CHAOS does not set cookies or track you. There is no close button because that would be good design.</p>
         <div id="cookie-sub-banners" class="space-y-3"></div>
         <div class="mt-7 flex flex-col gap-3 sm:flex-row">
           <button id="reject-cookies" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-3 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Reject all</button>
@@ -380,7 +703,7 @@
     <div id="error-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 p-4" role="alertdialog" aria-modal="true" aria-labelledby="error-title">
       <div class="w-full max-w-lg border-4 border-black bg-[#ff2c91] p-6 shadow-[10px_10px_0_#e7ff00]">
         <div class="mb-5 flex items-start justify-between gap-3">
-          <h2 id="error-title" class="text-2xl font-black uppercase">AUDIOKILL.exe — fatal nuisance</h2>
+          <h2 id="error-title" class="text-2xl font-black uppercase">CINE-CHAOS.exe — fatal nuisance</h2>
           <span class="text-2xl font-black" aria-hidden="true">×</span>
         </div>
         <p class="border-4 border-black bg-[#f5f0de] p-4 text-sm font-bold leading-relaxed">Error: Please enter your mother's maiden name to buffer the next 3 seconds of audio.</p>
@@ -436,7 +759,7 @@
       <div class="relative w-full max-w-xl border-[6px] border-black bg-black p-8 text-center shadow-[14px_14px_0_#ff2c91]">
         <div class="mb-4 inline-block -rotate-2 border-2 border-[#e7ff00] bg-[#ff2c91] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black">⚠ Ultron has noticed you ⚠</div>
         <h2 id="ultron-title" class="mb-6 text-5xl font-black uppercase leading-[.9] tracking-tight text-[#e7ff00] sm:text-7xl">You're<br />unbearably<br /><span class="text-[#ff2c91]">naive.</span></h2>
-        <p id="ultron-subtext" class="border-4 border-[#e7ff00] bg-[#f5f0de] p-5 text-sm font-bold uppercase leading-relaxed text-black">Did you really think satisfying rule #<span id="ultron-rule">1</span> meant something? You've only made it worse.</p>
+        <p id="ultron-subtext" class="border-4 border-[#e7ff00] bg-[#f5f0de] p-5 text-sm font-bold uppercase leading-relaxed text-black">You cleared <span id="ultron-milestones">7</span> major milestones. You've only made it worse.</p>
         <p class="mt-4 text-[10px] font-black uppercase tracking-wider text-[#ff2c91]">Sokovia is disappointed. So am I.</p>
         <div class="mt-7 flex flex-col items-center gap-2">
           <p class="text-[10px] font-black uppercase text-[#e7ff00]">Tap the tiny button to acknowledge your naivety</p>
@@ -491,7 +814,10 @@
 
       const ultronModal = document.querySelector("#ultron-modal");
       const ultronClose = document.querySelector("#ultron-close");
-      const ultronRuleEl = document.querySelector("#ultron-rule");
+      const ultronMilestonesEl = document.querySelector("#ultron-milestones");
+      const completedMajorMilestones = new Set();
+      const ultronMilestoneThreshold = 7;
+      let ultronPopupShown = false;
       function positionUltronClose() {
         const panel = ultronModal.querySelector("div");
         const rect = panel.getBoundingClientRect();
@@ -499,13 +825,31 @@
         ultronClose.style.left = `${rect.width - btnRect.width - 14}px`;
         ultronClose.style.top = `${rect.height - btnRect.height - 14}px`;
       }
-      function fireUltronPopup(ruleNumber) {
-        ultronRuleEl.textContent = String(ruleNumber);
+      function playUltronAudio() {
+        const ultronAudio = new Audio("assets/ultron_naive.mp3");
+        ultronAudio.play().catch(error => console.warn("Ultron victory audio could not play.", error));
+      }
+      function fireUltronPopup() {
+        if (ultronPopupShown) return;
+        ultronPopupShown = true;
+        ultronMilestonesEl.textContent = String(completedMajorMilestones.size);
         ultronModal.classList.remove("hidden");
         ultronModal.classList.add("flex");
         positionUltronClose();
-        const ultronAudio = new Audio("assets/ultron_naive.mp3");
-        ultronAudio.play().catch(error => console.warn("Ultron milestone audio could not play.", error));
+        ultronClose.focus();
+      }
+      function maybeFireUltronPopup() {
+        if (
+          completedMajorMilestones.size >= ultronMilestoneThreshold &&
+          clearedGauntletChallenges.size >= 2
+        ) {
+          fireUltronPopup();
+        }
+      }
+      function recordMajorMilestone(id) {
+        if (completedMajorMilestones.has(id)) return;
+        completedMajorMilestones.add(id);
+        maybeFireUltronPopup();
       }
       ultronClose.addEventListener("click", () => {
         ultronModal.classList.add("hidden");
@@ -533,7 +877,6 @@
             copy.classList.toggle("is-valid", valid);
           }
           for (const index of newlySatisfied) {
-            fireUltronPopup(index + 1);
             if (visibleRuleCount >= rules.length) break;
             const rulesToReveal = spawnWave % 2 === 0 ? 1 : 2;
             spawnWave += 1;
@@ -557,19 +900,411 @@
         validatePassword();
         if (loginButton.disabled) return;
         document.querySelector("#login-screen").classList.add("hidden");
-        document.querySelector("#captcha-screen").classList.remove("hidden");
-        createCaptchaGrid();
-        document.querySelector("#captcha-title").focus();
+        recordMajorMilestone("password-task-completed");
+        showGreedCertificate();
       });
 
       function enterPlayer() {
         document.querySelector("#captcha-screen").classList.add("hidden");
-        document.querySelector("#player-screen").classList.remove("hidden");
-        document.querySelector("#welcome-name").textContent = `Welcome, ${usernameInput.value.trim()}`;
-        document.querySelector("#cookie-banner").classList.remove("hidden");
-        initializeVolumeControl();
-        placeTeleportButton();
+        recordMajorMilestone("captcha-passed");
+        document.querySelector("#cinema-hub").classList.remove("hidden");
+        document.querySelector("#cinema-hub-welcome").textContent = `Welcome, ${usernameInput.value.trim()}. Pick a cinema to continue.`;
+        document.querySelector("#cinema-hub-title").focus();
       }
+
+      const cinemaHub = document.querySelector("#cinema-hub");
+      const cinemaHubFeedback = document.querySelector("#cinema-hub-feedback");
+      const vipScreen = document.querySelector("#vip-screen");
+      const cinemaDirectory = document.querySelector("#cinema-directory");
+      const visitedTrapCinemas = new Set();
+      let vipScreensUnlocked = false;
+      let checkoutCrashProcessed = false;
+      let cinemaBufferTimer;
+      let cinemaBufferTimeout;
+      let easySelectedSeat = "";
+      let certificateDownloadTimer;
+      let certificateCrashReloadTimer;
+      let certificateDownloadStep = 0;
+      const clearedGauntletChallenges = new Set();
+      let memoryFlashTimer;
+      let memoryItems = [];
+      let countdownProgress = 0;
+      let arrowProgress = 0;
+      let arrowPrompt = "";
+
+      function unlockVipScreens() {
+        vipScreensUnlocked = true;
+        recordMajorMilestone("vip-screens-unlocked");
+        for (const cinemaId of ["5", "6"]) {
+          const vipButton = cinemaDirectory.querySelector(`[data-cinema-id="${cinemaId}"]`);
+          vipButton.disabled = false;
+          vipButton.setAttribute("aria-disabled", "false");
+          vipButton.className = "hard-shadow min-h-40 border-4 border-black bg-[#ff2c91] p-5 text-left text-black transition hover:-translate-y-1 hover:bg-[#e7ff00]";
+          vipButton.querySelector("span:nth-child(1)").textContent = `Cinema 0${cinemaId} / unlocked`;
+          vipButton.querySelector("span:nth-child(3)").textContent = "Enter the secret screening →";
+        }
+      }
+
+      function recordTrapVisit(cinemaId) {
+        visitedTrapCinemas.add(cinemaId);
+        if (visitedTrapCinemas.size === 3) {
+          recordMajorMilestone("all-defective-cinemas-tested");
+          const workingCinema = cinemaDirectory.querySelector('[data-cinema-id="4"]');
+          workingCinema.disabled = false;
+          workingCinema.setAttribute("aria-disabled", "false");
+          workingCinema.className = "hard-shadow min-h-40 border-4 border-black bg-[#e7ff00] p-5 text-left transition hover:-translate-y-1 hover:bg-[#ff2c91]";
+          workingCinema.querySelector("span:first-child").textContent = "Cinema 04 / apparently working";
+          workingCinema.querySelector("span:nth-child(3)").textContent = "Enter for the seat-selection challenge →";
+        }
+      }
+
+      function openCinema(cinemaId) {
+        if (cinemaId === "1") {
+          recordTrapVisit(cinemaId);
+          cinemaHubFeedback.textContent = `ERROR 404: Projectors stolen. The theft report has been projected onto nothing. Traps tested: ${visitedTrapCinemas.size}/3.`;
+          return;
+        }
+        if (cinemaId === "2") {
+          recordTrapVisit(cinemaId);
+          cinemaHubFeedback.textContent = `SCREEN MELTED FROM USER RAGE. Please enjoy the puddle in IMAX. Traps tested: ${visitedTrapCinemas.size}/3.`;
+          return;
+        }
+        if (cinemaId === "3") {
+          recordTrapVisit(cinemaId);
+          window.clearInterval(cinemaBufferTimer);
+          window.clearTimeout(cinemaBufferTimeout);
+          let progress = 0;
+          cinemaHubFeedback.textContent = `Void Cinemas is buffering: 0% (traps tested: ${visitedTrapCinemas.size}/3)`;
+          cinemaBufferTimer = window.setInterval(() => {
+            progress = Math.min(99, progress + 17);
+            cinemaHubFeedback.textContent = `Void Cinemas is buffering: ${progress}%`;
+          }, 350);
+          cinemaBufferTimeout = window.setTimeout(() => {
+            window.clearInterval(cinemaBufferTimer);
+            cinemaHubFeedback.textContent = "Buffer loop detected at 99%. The directory remains available. Cinema 04 is now unlocked; the movie does not.";
+          }, 2300);
+          return;
+        }
+        if (cinemaId === "4") {
+          if (visitedTrapCinemas.size < 3) return;
+          cinemaHub.classList.add("hidden");
+          document.querySelector("#easy-seat-screen").classList.remove("hidden");
+          document.querySelector("#easy-seat-title").focus();
+          return;
+        }
+        if ((cinemaId === "5" || cinemaId === "6") && vipScreensUnlocked) {
+          const isFirstScreen = cinemaId === "5";
+          document.querySelector("#vip-screen-title").textContent = isFirstScreen
+            ? "VIP Secret Movie Screen A"
+            : "VIP Secret Movie Screen B";
+          document.querySelector("#vip-screen-copy").textContent = isFirstScreen
+            ? "Tonight's exclusive feature: the F12 gatekeeper gauntlet. Clear any one of three trials to reveal the stable seat map."
+            : "Tonight's exclusive feature: the same F12 gatekeeper gauntlet, with a different shade of regret. One win unlocks the stable seat map.";
+          cinemaHub.classList.add("hidden");
+          vipScreen.classList.remove("hidden");
+          document.querySelector("#vip-screen-title").focus();
+        }
+      }
+
+      cinemaDirectory.addEventListener("click", event => {
+        const button = event.target instanceof Element ? event.target.closest("[data-cinema-id]") : null;
+        if (!button || button.disabled) return;
+        openCinema(button.dataset.cinemaId);
+      });
+
+      function returnToCinemaHub() {
+        document.querySelector("#survivor-screen").classList.add("hidden");
+        vipScreen.classList.add("hidden");
+        document.querySelector("#easy-seat-screen").classList.add("hidden");
+        document.querySelector("#payment-screen").classList.add("hidden");
+        document.querySelector("#checkout-crash").classList.add("hidden");
+        document.querySelector("#greed-certificate-modal").classList.add("hidden");
+        document.querySelector("#greed-certificate-modal").classList.remove("flex");
+        window.clearInterval(certificateDownloadTimer);
+        cinemaHub.classList.remove("hidden");
+        cinemaHubFeedback.textContent = checkoutCrashProcessed
+          ? "System crash processed successfully. As a reward for losing your money, the 2 VIP locked movie screens have now been unlocked!"
+          : vipScreensUnlocked
+            ? "F12 survived. VIP Secret Movie Screens A and B are unlocked. Cinema 07 remains sealed."
+            : "Select a venue. Management accepts no responsibility for optimism.";
+        document.querySelector("#cinema-hub-title").focus();
+      }
+
+      function updateGauntletGate() {
+        const clearedCount = clearedGauntletChallenges.size;
+        const gateButton = document.querySelector("#gauntlet-enter-map");
+        const gateStatus = document.querySelector("#gauntlet-gate-status");
+        document.querySelector("#gauntlet-score").textContent = `${clearedCount} / 3 cleared`;
+        gateButton.disabled = clearedCount < 1;
+        gateStatus.textContent = clearedCount >= 1
+          ? "Gate breached. The F12 seat map is stable and ready."
+          : "Choose and clear any one of the three challenges to reveal the real seat map.";
+      }
+
+      function clearChallenge(id, statusSelector, message) {
+        clearedGauntletChallenges.add(id);
+        recordMajorMilestone(`gauntlet-${id}-cleared`);
+        document.querySelector(statusSelector).textContent = message;
+        updateGauntletGate();
+      }
+
+      const memoryWordPool = [
+        "PROJECTOR", "POPCORN", "TICKET", "AISLE", "VELVET", "SCREEN", "USHER",
+        "REEL", "BALCONY", "SUBTITLE", "MATINEE", "SNACKS", "SPOTLIGHT", "TRAILER",
+        "EXIT", "SODA", "SEAT", "APPLAUSE", "DARKNESS", "CREDITS", "LENS"
+      ];
+      document.querySelector("#memory-start-button").addEventListener("click", event => {
+        if (clearedGauntletChallenges.has("memory")) return;
+        window.clearTimeout(memoryFlashTimer);
+        const shuffled = [...memoryWordPool].sort(() => Math.random() - 0.5);
+        memoryItems = shuffled.slice(0, 7);
+        const flash = document.querySelector("#memory-flash-items");
+        const recallForm = document.querySelector("#memory-recall-form");
+        const recallInput = document.querySelector("#memory-recall-input");
+        flash.textContent = memoryItems.join(" · ");
+        flash.classList.remove("hidden");
+        recallForm.classList.add("hidden");
+        recallInput.value = "";
+        recallInput.disabled = true;
+        event.currentTarget.disabled = true;
+        document.querySelector("#memory-challenge-status").textContent = "Memorize now. Five seconds start... now.";
+        memoryFlashTimer = window.setTimeout(() => {
+          flash.textContent = "";
+          flash.classList.add("hidden");
+          recallForm.classList.remove("hidden");
+          recallInput.disabled = false;
+          recallInput.focus();
+          document.querySelector("#memory-start-button").disabled = false;
+          document.querySelector("#memory-challenge-status").textContent = "Flash ended. Recall at least five items, separated by commas.";
+        }, 5000);
+      });
+
+      document.querySelector("#memory-recall-form").addEventListener("submit", event => {
+        event.preventDefault();
+        if (clearedGauntletChallenges.has("memory")) return;
+        const answers = new Set(
+          document.querySelector("#memory-recall-input").value
+            .split(",")
+            .map(item => item.trim().toLocaleUpperCase())
+            .filter(Boolean)
+        );
+        const correctCount = memoryItems.filter(item => answers.has(item)).length;
+        if (correctCount >= 5) {
+          document.querySelector("#memory-recall-input").disabled = true;
+          document.querySelector("#memory-start-button").disabled = true;
+          clearChallenge("memory", "#memory-challenge-status", `${correctCount} of 7 recalled. Memory remains annoyingly functional.`);
+          return;
+        }
+        document.querySelector("#memory-challenge-status").textContent = `${correctCount} correct. Need at least 5; start a fresh flash and try again.`;
+        document.querySelector("#memory-recall-form").classList.add("hidden");
+        document.querySelector("#memory-start-button").disabled = false;
+        memoryItems = [];
+      });
+
+      function expectedCountdownNumber() {
+        let number = 321;
+        for (let step = 0; step <= countdownProgress; step += 1) {
+          number -= 1;
+          while (number % 3 === 0) number -= 1;
+        }
+        return number;
+      }
+
+      document.querySelector("#countdown-challenge-form").addEventListener("submit", event => {
+        event.preventDefault();
+        if (clearedGauntletChallenges.has("countdown")) return;
+        const input = document.querySelector("#countdown-challenge-input");
+        const submitted = Number(input.value);
+        input.value = "";
+        if (Number.isInteger(submitted) && submitted % 3 === 0) {
+          countdownProgress = 0;
+          document.querySelector("#countdown-next").textContent = "320";
+          document.querySelector("#countdown-challenge-status").textContent = "Multiple of 3 detected. Reset to 321; next answer is 320.";
+          return;
+        }
+        if (submitted !== expectedCountdownNumber()) {
+          countdownProgress = 0;
+          document.querySelector("#countdown-next").textContent = "320";
+          document.querySelector("#countdown-challenge-status").textContent = "Wrong number. Countdown reset to 321; next answer is 320.";
+          return;
+        }
+        countdownProgress += 1;
+        if (countdownProgress >= 10) {
+          input.disabled = true;
+          clearChallenge("countdown", "#countdown-challenge-status", "Ten valid numbers. Multiples of three were successfully erased from reality.");
+          return;
+        }
+        const next = expectedCountdownNumber();
+        document.querySelector("#countdown-next").textContent = String(next);
+        document.querySelector("#countdown-challenge-status").textContent = `${countdownProgress} / 10 consecutive. Next required: ${next}.`;
+      });
+
+      const arrowDirections = ["LEFT", "RIGHT", "UP", "DOWN"];
+      const oppositeDirection = { LEFT: "RIGHT", RIGHT: "LEFT", UP: "DOWN", DOWN: "UP" };
+      function setNextArrowPrompt() {
+        arrowPrompt = arrowDirections[Math.floor(Math.random() * arrowDirections.length)];
+        document.querySelector("#arrow-prompt").textContent = arrowPrompt;
+      }
+      setNextArrowPrompt();
+      document.querySelector("#arrow-buttons").addEventListener("click", event => {
+        const button = event.target instanceof Element ? event.target.closest("[data-arrow-choice]") : null;
+        if (!button || clearedGauntletChallenges.has("arrow")) return;
+        if (button.dataset.arrowChoice !== oppositeDirection[arrowPrompt]) {
+          arrowProgress = 0;
+          document.querySelector("#arrow-progress").textContent = "0 / 8";
+          document.querySelector("#arrow-challenge-status").textContent = `Wrong way. ${arrowPrompt} means ${oppositeDirection[arrowPrompt]}. Reflex sequence reset.`;
+          setNextArrowPrompt();
+          return;
+        }
+        arrowProgress += 1;
+        document.querySelector("#arrow-progress").textContent = `${arrowProgress} / 8`;
+        if (arrowProgress >= 8) {
+          document.querySelector("#arrow-buttons").querySelectorAll("button").forEach(choice => { choice.disabled = true; });
+          document.querySelector("#arrow-prompt").textContent = "CLEARED";
+          clearChallenge("arrow", "#arrow-challenge-status", "Eight inversions survived. Your left is now someone else's right.");
+          return;
+        }
+        document.querySelector("#arrow-challenge-status").textContent = "Correct inversion. The next direction is already judging you.";
+        setNextArrowPrompt();
+      });
+
+      document.querySelector("#gauntlet-enter-map").addEventListener("click", () => {
+        if (clearedGauntletChallenges.size < 1) return;
+        vipScreen.classList.add("hidden");
+        document.querySelector("#seat-challenge").classList.remove("hidden");
+        document.querySelector("#seat-title").focus();
+      });
+
+      const easySeatGrid = document.querySelector("#easy-seat-grid");
+      for (const row of "ABCDEFGH") {
+        for (let column = 1; column <= 12; column += 1) {
+          const seat = document.createElement("button");
+          seat.type = "button";
+          seat.dataset.easySeat = `${row}${column}`;
+          seat.className = "border-4 border-black bg-white px-2 py-3 text-sm font-black hover:bg-[#e7ff00] sm:py-4";
+          seat.textContent = `${row}${column}`;
+          seat.setAttribute("aria-label", `Seat ${row}${column}`);
+          easySeatGrid.append(seat);
+        }
+      }
+
+      easySeatGrid.addEventListener("click", event => {
+        const button = event.target instanceof Element ? event.target.closest("[data-easy-seat]") : null;
+        if (!button) return;
+        easySelectedSeat = button.dataset.easySeat;
+        for (const seatButton of document.querySelectorAll("#easy-seat-grid [data-easy-seat]")) {
+          seatButton.classList.toggle("bg-[#e7ff00]", seatButton === button);
+          seatButton.setAttribute("aria-pressed", String(seatButton === button));
+        }
+        document.querySelector("#easy-seat-feedback").textContent = `Seat ${easySelectedSeat} selected. That was almost suspiciously easy.`;
+        document.querySelector("#easy-seat-continue").disabled = false;
+      });
+
+      document.querySelector("#easy-seat-continue").addEventListener("click", () => {
+        if (!easySelectedSeat) return;
+        document.querySelector("#payment-seat").textContent = easySelectedSeat;
+        document.querySelector("#easy-seat-screen").classList.add("hidden");
+        document.querySelector("#payment-screen").classList.remove("hidden");
+        document.querySelector("#payment-title").focus();
+      });
+
+      function crashCheckout() {
+        if (document.querySelector("#checkout-crash").classList.contains("hidden") === false) return;
+        document.querySelector("#payment-screen").classList.add("hidden");
+        document.querySelector("#checkout-crash").classList.remove("hidden");
+        recordMajorMilestone("payment-crash-completed");
+        document.querySelector("#payment-form").reset();
+        document.querySelector("#checkout-crash-title").focus();
+      }
+
+      function showGreedCertificate() {
+        document.querySelector("#greed-certificate-holder").textContent = usernameInput.value.trim() || "Valued Target";
+        document.querySelector("#greed-certificate-score").textContent = String(60 + Math.floor(Math.random() * 41));
+        document.querySelector("#certificate-content").classList.remove("hidden");
+        document.querySelector("#certificate-download-progress").classList.add("hidden");
+        document.querySelector("#certificate-download-error").classList.add("hidden");
+        window.clearTimeout(certificateCrashReloadTimer);
+        document.querySelector("#certificate-download-percent").textContent = "0.0%";
+        document.querySelector("#certificate-download-bar").style.width = "0%";
+        document.querySelector("#download-survival-certificate").disabled = false;
+        document.querySelector("#download-survival-certificate").textContent = "Download Survival Certificate (PDF)";
+        document.querySelector("#greed-certificate-modal").classList.remove("hidden");
+        document.querySelector("#greed-certificate-modal").classList.add("flex");
+        document.querySelector("#greed-certificate-title").focus();
+      }
+
+      function continueToCaptcha() {
+        window.clearInterval(certificateDownloadTimer);
+        document.querySelector("#greed-certificate-modal").classList.add("hidden");
+        document.querySelector("#greed-certificate-modal").classList.remove("flex");
+        document.querySelector("#captcha-screen").classList.remove("hidden");
+        createCaptchaGrid();
+        document.querySelector("#captcha-title").focus();
+      }
+
+      document.querySelector("#dismiss-greed-certificate").addEventListener("click", continueToCaptcha);
+
+      const certificateDownloadStages = [
+        "Preparing 17 decorative signatures...",
+        "Embossing the official seal with pure audacity...",
+        "Consulting the committee on fictional fees...",
+        "Compressing the receipt into a moral lesson...",
+        "Waiting for approval from the empty projector room..."
+      ];
+      document.querySelector("#download-survival-certificate").addEventListener("click", event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = "Download initiated / regrettably";
+        const progress = document.querySelector("#certificate-download-progress");
+        const percent = document.querySelector("#certificate-download-percent");
+        const bar = document.querySelector("#certificate-download-bar");
+        const stage = document.querySelector("#certificate-download-stage");
+        const detail = document.querySelector("#certificate-download-detail");
+        progress.classList.remove("hidden");
+        certificateDownloadStep = 0;
+        percent.textContent = "0.0%";
+        bar.style.width = "0%";
+        detail.textContent = "Elapsed: 0 seconds · Remaining: 11 seconds · Estimated sincerity: unavailable";
+        window.clearInterval(certificateDownloadTimer);
+        certificateDownloadTimer = window.setInterval(() => {
+          certificateDownloadStep += 1;
+          const elapsedSeconds = certificateDownloadStep * 0.11;
+          const percentage = certificateDownloadStep === 100 ? 99.9 : certificateDownloadStep * 0.999;
+          percent.textContent = `${percentage.toFixed(1)}%`;
+          bar.style.width = `${percentage}%`;
+          stage.textContent = certificateDownloadStages[Math.min(
+            certificateDownloadStages.length - 1,
+            Math.floor((certificateDownloadStep - 1) / 20)
+          )];
+          detail.textContent = `Elapsed: ${elapsedSeconds.toFixed(1)} seconds · Remaining: ${(11 - elapsedSeconds).toFixed(1)} seconds · Signature ${certificateDownloadStep} of 100`;
+          if (certificateDownloadStep < 100) return;
+          window.clearInterval(certificateDownloadTimer);
+          document.querySelector("#certificate-content").classList.add("hidden");
+          document.querySelector("#certificate-download-error").classList.remove("hidden");
+          document.querySelector("#restart-after-certificate-crash").focus();
+          certificateCrashReloadTimer = window.setTimeout(() => window.location.reload(), 3000);
+        }, 110);
+      });
+
+      document.querySelector("#restart-after-certificate-crash").addEventListener("click", () => {
+        window.clearTimeout(certificateCrashReloadTimer);
+        window.location.reload();
+      });
+
+      document.querySelector("#payment-form").addEventListener("submit", event => {
+        event.preventDefault();
+        crashCheckout();
+      });
+      document.querySelector("#payment-form").addEventListener("input", crashCheckout);
+      document.querySelector("#crash-return-hub").addEventListener("click", () => {
+        checkoutCrashProcessed = true;
+        unlockVipScreens();
+        returnToCinemaHub();
+      });
+
+      document.querySelector("#vip-return-hub").addEventListener("click", returnToCinemaHub);
+      document.querySelector("#survivor-return-hub").addEventListener("click", returnToCinemaHub);
+      document.querySelector("#restart-horror").addEventListener("click", () => window.location.reload());
 
       const captchaGrid = document.querySelector("#captcha-grid");
       function createCaptchaGrid() {
@@ -1127,6 +1862,145 @@
         }
         positionInsultClose();
       });
+
+      const seatMap = document.querySelector("#seat-map");
+      const seatMapCard = document.querySelector("#seat-map-card");
+      const seatConfirmModal = document.querySelector("#seat-confirm-modal");
+      const confirmSeatButton = document.querySelector("#seat-confirm-button");
+      const cancelSeatButton = document.querySelector("#seat-cancel-button");
+      const seatConfirmTitle = document.querySelector("#seat-confirm-title");
+      const seatConfirmCopy = document.querySelector("#seat-confirm-copy");
+      let decoyClicks = 0;
+      let seatDodges = 0;
+      let pendingSeatConfirmation = "";
+      let feedbackTimer;
+      const decoySeats = new Map([
+        ["B-4", "FXII"],
+        ["D-17", "F-12"],
+        ["H-6", "F1.2"]
+      ]);
+
+      function showSeatError(message) {
+        const feedback = document.querySelector("#seat-feedback");
+        feedback.textContent = message;
+        clearTimeout(feedbackTimer);
+        feedbackTimer = window.setTimeout(() => { feedback.textContent = ""; }, 2400);
+        seatMapCard.classList.remove("seat-map-shake");
+        void seatMapCard.offsetWidth;
+        seatMapCard.classList.add("seat-map-shake");
+        window.setTimeout(() => seatMapCard.classList.remove("seat-map-shake"), 450);
+      }
+
+      function selectSeat(row, column) {
+        const key = `${row}-${column}`;
+        if (decoySeats.has(key)) {
+          decoyClicks += 1;
+          showSeatError(`${decoySeats.get(key)} is not F12. The hyphen was a cry for help.`);
+          return;
+        }
+        pendingSeatConfirmation = `${row}${column}`;
+        seatMap.querySelectorAll(".is-selected").forEach(seat => {
+          seat.classList.remove("is-selected");
+          seat.setAttribute("aria-pressed", "false");
+        });
+        const selectedSeat = document.getElementById(
+          row === "F" && column === 12 ? "true-seat-f12" : `seat-${row}${column}`
+        );
+        if (selectedSeat) {
+          selectedSeat.classList.add("is-selected");
+          selectedSeat.setAttribute("aria-pressed", "true");
+        }
+        seatConfirmTitle.textContent = `Seat ${pendingSeatConfirmation}?`;
+        seatConfirmCopy.textContent = `You selected ${pendingSeatConfirmation}. Only confirming F12 completes the challenge.`;
+        seatConfirmModal.classList.remove("hidden");
+        seatConfirmModal.classList.add("flex");
+        confirmSeatButton.focus();
+      }
+
+      function buildSeatMap() {
+        const corner = document.createElement("span");
+        corner.setAttribute("aria-hidden", "true");
+        seatMap.append(corner);
+        for (let column = 1; column <= 20; column += 1) {
+          const heading = document.createElement("span");
+          heading.className = "seat-row-label";
+          heading.textContent = String(column);
+          seatMap.append(heading);
+        }
+
+        for (const [rowIndex, row] of [..."ABCDEFGHIJ"].entries()) {
+          const rowLabel = document.createElement("span");
+          rowLabel.className = "seat-row-label";
+          rowLabel.textContent = row;
+          rowLabel.style.setProperty("--row-delay", `${rowIndex * -0.17}s`);
+          seatMap.append(rowLabel);
+          for (let column = 1; column <= 20; column += 1) {
+            const seat = document.createElement("button");
+            const key = `${row}-${column}`;
+            seat.type = "button";
+            seat.className = "seat";
+            seat.textContent = decoySeats.get(key) || String(column);
+            seat.setAttribute("aria-label", decoySeats.has(key)
+              ? `Decoy seat ${decoySeats.get(key)}`
+              : `Seat ${row}${column}`);
+            seat.style.setProperty("--row-delay", `${rowIndex * -0.17}s`);
+            if (decoySeats.has(key)) seat.classList.add("is-decoy");
+            if (row === "F" && column === 12) {
+              seat.classList.add("is-target");
+              seat.id = "true-seat-f12";
+              seat.setAttribute("aria-label", "Seat F12");
+            }
+            else {
+              seat.id = `seat-${row}${column}`;
+            }
+            seat.setAttribute("aria-pressed", "false");
+            seat.addEventListener("click", () => selectSeat(row, column));
+            seatMap.append(seat);
+          }
+        }
+      }
+
+      cancelSeatButton.addEventListener("click", () => {
+        seatConfirmModal.classList.add("hidden");
+        seatConfirmModal.classList.remove("flex");
+        pendingSeatConfirmation = "";
+        showSeatError("Selection cancelled. F12 is still there. Somewhere.");
+      });
+      confirmSeatButton.addEventListener("click", () => {
+        if (clearedGauntletChallenges.size < 1 || pendingSeatConfirmation !== "F12") {
+          seatConfirmModal.classList.add("hidden");
+          seatConfirmModal.classList.remove("flex");
+          pendingSeatConfirmation = "";
+          showSeatError("Not quite. Select F12 and confirm it to claim your victory.");
+          return;
+        }
+        seatConfirmModal.classList.add("hidden");
+        seatConfirmModal.classList.remove("flex");
+        pendingSeatConfirmation = "";
+        unlockVipScreens();
+        document.querySelector("#seat-challenge").classList.add("hidden");
+        document.querySelector("#survivor-screen").classList.remove("hidden");
+        document.querySelector("#stat-dodges").textContent = String(seatDodges);
+        document.querySelector("#stat-decoys").textContent = String(decoyClicks);
+        document.querySelector("#stat-challenges").textContent = String(clearedGauntletChallenges.size);
+        document.querySelector("#victory-ticket-id").textContent = `CC-F12-${String(Date.now()).slice(-6)}`;
+        playUltronAudio();
+        const colors = ["#ff2c91", "#e7ff00", "#171717", "#f5f0de"];
+        const confettiLayer = document.querySelector("#confetti-layer");
+        for (let index = 0; index < 80; index += 1) {
+          const confetti = document.createElement("span");
+          confetti.className = "survivor-confetti";
+          confetti.style.left = `${Math.random() * 100}%`;
+          confetti.style.backgroundColor = colors[index % colors.length];
+          confetti.style.setProperty("--fall-time", `${2 + Math.random() * 3}s`);
+          confetti.style.setProperty("--drift", `${Math.random() * 220 - 110}px`);
+          confetti.style.animationDelay = `${Math.random() * 1.2}s`;
+          confettiLayer.append(confetti);
+          window.setTimeout(() => confetti.remove(), 6500);
+        }
+        document.querySelector("#survivor-title").focus();
+      });
+      buildSeatMap();
     </script>
   </body>
 </html>
