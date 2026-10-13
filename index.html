@@ -47,7 +47,24 @@
         transition: transform .12s, background-color .12s;
       }
       .captcha-tile:hover { transform: rotate(-1deg) scale(1.025); }
-      .captcha-tile.is-selected { background: var(--acid); outline: 4px solid var(--pink); outline-offset: -8px; }
+      .captcha-tile.is-cleared {
+        background: #3a3a3a;
+        opacity: .55;
+        pointer-events: none;
+      }
+      .captcha-tile.is-cleared::after {
+        content: "✕";
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(2.5rem, 9vw, 4.5rem);
+        font-weight: 900;
+        color: var(--pink);
+        text-shadow: 2px 2px 0 var(--ink);
+      }
       .captcha-wall {
         position: absolute;
         inset: 12% 10% 18%;
@@ -97,6 +114,7 @@
         background: #ff2c91;
         box-shadow: 0 0 0 1px #171717, 0 0 5px 2px #ff2c91;
         pointer-events: none;
+        z-index: 2;
       }
       .captcha-shake { animation: captcha-shake .42s cubic-bezier(.36,.07,.19,.97) both; }
       @keyframes captcha-shake {
@@ -116,6 +134,14 @@
         transition: opacity .15s ease, transform .15s ease;
       }
       .skull-easter-egg:hover, .skull-easter-egg:focus-visible { opacity: 1; transform: rotate(12deg) scale(1.2); }
+      .insult-tiny-close {
+        transition: left .1s linear, top .1s linear;
+        z-index: 5;
+      }
+      .ultron-tiny-close {
+        transition: left .08s linear, top .08s linear;
+        z-index: 5;
+      }
       .grain {
         background-image: repeating-linear-gradient(0deg, transparent 0 3px, #00000012 3px 4px),
           repeating-linear-gradient(90deg, transparent 0 19px, #fff2 19px 21px),
@@ -241,8 +267,8 @@
         <div id="captcha-card" class="hard-shadow border-4 border-black bg-[#f5f0de] p-5 sm:p-8">
           <div class="mb-5 inline-block -rotate-1 border-2 border-black bg-[#ff2c91] px-2 py-1 text-[10px] uppercase">One last totally normal step</div>
           <h1 id="captcha-title" tabindex="-1" class="mb-4 text-4xl font-black uppercase leading-[.9] tracking-tight sm:text-6xl">Prove you are not a robot (or else)</h1>
-          <p class="mb-2 text-sm font-black uppercase">Select all images that capture the profound spiritual emptiness of Monday morning at 8:00 AM.</p>
-          <p class="mb-5 text-[10px] font-bold uppercase">Hint: look for the tiny pink speck near the bottom-right of one image. Pick that image, then verify humanity.</p>
+          <p class="mb-2 text-sm font-black uppercase">Click every tile except the one secretly crushing it at Monday morning at 8:00 AM.</p>
+          <p class="mb-5 text-[10px] font-bold uppercase">Hint: look for the tiny pink speck near the bottom-right of one image. That is definitely the tile you want. Probably.</p>
           <p id="captcha-error" class="mb-3 min-h-5 text-xs font-black uppercase text-red-700" aria-live="assertive"></p>
           <div id="captcha-grid" class="grid grid-cols-3 gap-3 sm:gap-4" aria-label="Nine Monday morning images"></div>
           <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t-4 border-black pt-5">
@@ -298,7 +324,10 @@
             </div>
             <div class="mt-7 flex flex-wrap items-center justify-between gap-3">
               <p class="text-[10px] font-bold uppercase">Mood: <span id="mood" class="bg-[#ff2c91] px-1">Mildly alarmed</span></p>
-              <button id="next-track" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-2 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Next track →</button>
+              <div class="flex flex-wrap items-center gap-3">
+                <button id="customize-vibe" type="button" class="border-4 border-black bg-[#e7ff00] px-5 py-2 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Optimize taste ✦</button>
+                <button id="next-track" type="button" class="border-4 border-black bg-[#ff2c91] px-5 py-2 text-sm font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Next track →</button>
+              </div>
             </div>
           </section>
 
@@ -368,6 +397,54 @@
       </div>
     </div>
 
+    <div id="vibe-modal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="vibe-title">
+      <div class="w-full max-w-lg border-4 border-black bg-[#f5f0de] p-7 text-center shadow-[12px_12px_0_#ff2c91]">
+        <div class="mb-4 inline-block -rotate-1 border-2 border-black bg-[#ff2c91] px-3 py-1 text-[10px] font-black uppercase">Vibe optimization (definitely not a trap)</div>
+        <h2 id="vibe-title" class="mb-5 text-3xl font-black uppercase leading-[.95]">ENTER YOUR ALL-TIME FAVORITE SONG (URL OR NAME) SO WE CAN TOTALLY RESPECT YOUR VIBE.</h2>
+        <input id="vibe-input" type="text" autocomplete="off" class="mb-5 w-full border-4 border-black bg-white px-4 py-4 text-base font-black uppercase outline-none" placeholder="e.g. https://... or a song name" />
+        <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button id="vibe-submit" type="button" class="border-4 border-black bg-[#e7ff00] px-6 py-3 text-base font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Submit &amp; play</button>
+          <button id="vibe-cancel" type="button" class="border-4 border-black bg-[#ff2c91] px-6 py-3 text-base font-black uppercase shadow-[4px_4px_0_#171717] hover:translate-y-1 hover:shadow-none">Actually, never mind</button>
+        </div>
+        <p class="mt-4 text-[10px] font-bold uppercase">We promise we will definitely play exactly what you asked for. We never lie.</p>
+      </div>
+    </div>
+
+    <div id="vibe-loading" class="fixed inset-0 z-[81] hidden items-center justify-center bg-black/90 p-4" role="status" aria-live="assertive">
+      <div class="w-full max-w-md border-4 border-black bg-[#f5f0de] p-8 text-center shadow-[10px_10px_0_#e7ff00]">
+        <h2 class="mb-6 text-2xl font-black uppercase leading-tight">Analyzing your superior musical frequencies... Curating perfection...</h2>
+        <div class="spinner mx-auto" aria-hidden="true"></div>
+        <p id="vibe-loading-percent" class="mt-5 text-4xl font-black tabular-nums">0%</p>
+        <p class="mt-2 text-xs font-black uppercase">We take your taste very seriously. (No we don't.)</p>
+      </div>
+    </div>
+
+    <div id="insult-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/90 p-4" role="alertdialog" aria-modal="true" aria-labelledby="insult-title">
+      <div class="relative w-full max-w-2xl border-[6px] border-black bg-[#ff2c91] p-8 text-center shadow-[14px_14px_0_#e7ff00]">
+        <div class="mb-4 inline-block rotate-1 border-2 border-black bg-black px-3 py-1 text-[10px] font-black uppercase text-[#e7ff00]">System notice · please enjoy</div>
+        <h2 id="insult-title" class="mb-6 text-4xl font-black uppercase leading-[.9] tracking-tight sm:text-6xl">ERROR 404: GOOD TASTE NOT FOUND</h2>
+        <p class="border-4 border-black bg-[#f5f0de] p-5 text-sm font-bold leading-relaxed">Because your taste in music is a federal offense, we have overridden your choice with something objectively worse. Enjoy your forced upgrade.</p>
+        <p class="mt-4 text-[10px] font-black uppercase tracking-wider">Your mouse movements are being recorded and judged by a panel of disappointed sound engineers.</p>
+        <div class="mt-7 flex flex-col items-center gap-2">
+          <p id="insult-hint" class="text-[10px] font-black uppercase">Tap the tiny button <span id="insult-clicks">0</span> / 5 times to accept your punishment</p>
+          <button id="insult-close" type="button" class="insult-tiny-close absolute flex h-3 w-3 items-center justify-center border border-black bg-[#e7ff00] text-[8px] font-black leading-none" aria-label="Close this very important message">×</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="ultron-modal" class="fixed inset-0 z-[95] hidden items-center justify-center bg-black/85 p-4" role="alertdialog" aria-modal="true" aria-labelledby="ultron-title">
+      <div class="relative w-full max-w-xl border-[6px] border-black bg-black p-8 text-center shadow-[14px_14px_0_#ff2c91]">
+        <div class="mb-4 inline-block -rotate-2 border-2 border-[#e7ff00] bg-[#ff2c91] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black">⚠ Ultron has noticed you ⚠</div>
+        <h2 id="ultron-title" class="mb-6 text-5xl font-black uppercase leading-[.9] tracking-tight text-[#e7ff00] sm:text-7xl">You're<br />unbearably<br /><span class="text-[#ff2c91]">naive.</span></h2>
+        <p id="ultron-subtext" class="border-4 border-[#e7ff00] bg-[#f5f0de] p-5 text-sm font-bold uppercase leading-relaxed text-black">Did you really think satisfying rule #<span id="ultron-rule">1</span> meant something? You've only made it worse.</p>
+        <p class="mt-4 text-[10px] font-black uppercase tracking-wider text-[#ff2c91]">Sokovia is disappointed. So am I.</p>
+        <div class="mt-7 flex flex-col items-center gap-2">
+          <p class="text-[10px] font-black uppercase text-[#e7ff00]">Tap the tiny button to acknowledge your naivety</p>
+          <button id="ultron-close" type="button" class="ultron-tiny-close absolute flex h-5 w-5 items-center justify-center border border-black bg-[#ff2c91] text-[10px] font-black leading-none text-black" aria-label="Acknowledge your naivety">×</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const passwordInput = document.querySelector("#password");
       const usernameInput = document.querySelector("#username");
@@ -412,6 +489,110 @@
         return item;
       });
 
+      let ultronAudioContext;
+      function playUltronLaugh() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!ultronAudioContext) {
+          ultronAudioContext = new AudioContextClass();
+        }
+        if (ultronAudioContext.state === "suspended") ultronAudioContext.resume();
+        const ctx = ultronAudioContext;
+        const now = ctx.currentTime;
+        const master = ctx.createGain();
+        master.gain.value = 0.55;
+        master.connect(ctx.destination);
+
+        const bufferSize = ctx.sampleRate * 1.4;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = "bandpass";
+        noiseFilter.Q.value = 1.2;
+        noiseFilter.frequency.setValueAtTime(900, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(300, now + 1.2);
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.3);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(master);
+        noise.start(now);
+        noise.stop(now + 1.4);
+
+        const osc = ctx.createOscillator();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.5);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 1.1);
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.0001, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.5, now + 0.06);
+        oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+        osc.connect(oscGain);
+        oscGain.connect(master);
+        osc.start(now);
+        osc.stop(now + 1.3);
+
+        const sub = ctx.createOscillator();
+        sub.type = "square";
+        sub.frequency.setValueAtTime(110, now);
+        sub.frequency.exponentialRampToValueAtTime(45, now + 1.1);
+        const subGain = ctx.createGain();
+        subGain.gain.setValueAtTime(0.0001, now);
+        subGain.gain.exponentialRampToValueAtTime(0.35, now + 0.08);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.15);
+        sub.connect(subGain);
+        subGain.connect(master);
+        sub.start(now);
+        sub.stop(now + 1.2);
+      }
+
+      const ultronModal = document.querySelector("#ultron-modal");
+      const ultronClose = document.querySelector("#ultron-close");
+      const ultronRuleEl = document.querySelector("#ultron-rule");
+      function positionUltronClose() {
+        const panel = ultronModal.querySelector("div");
+        const rect = panel.getBoundingClientRect();
+        const btnRect = ultronClose.getBoundingClientRect();
+        ultronClose.style.left = `${rect.width - btnRect.width - 14}px`;
+        ultronClose.style.top = `${rect.height - btnRect.height - 14}px`;
+      }
+      function speakUltronLine() {
+        const synth = window.speechSynthesis;
+        if (!synth) return;
+        synth.cancel();
+        const utter = new SpeechSynthesisUtterance("You are unbearably naive.");
+        utter.rate = 0.6;
+        utter.pitch = 0.2;
+        utter.volume = 1;
+        const voices = synth.getVoices();
+        const deepVoice = voices.find((v) => /male|google uk english male|daniel|alex|fred/i.test(v.name));
+        if (deepVoice) utter.voice = deepVoice;
+        synth.speak(utter);
+      }
+      function fireUltronPopup(ruleNumber) {
+        ultronRuleEl.textContent = String(ruleNumber);
+        ultronModal.classList.remove("hidden");
+        ultronModal.classList.add("flex");
+        positionUltronClose();
+        try { playUltronLaugh(); } catch (err) {}
+        try { speakUltronLine(); } catch (err) {}
+      }
+      ultronClose.addEventListener("click", () => {
+        try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (err) {}
+        ultronModal.classList.add("hidden");
+        ultronModal.classList.remove("flex");
+      });
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => {};
+      }
+
       function validatePassword() {
         const value = passwordInput.value;
         let passed = 0;
@@ -433,6 +614,7 @@
             copy.classList.toggle("is-valid", valid);
           }
           for (const index of newlySatisfied) {
+            fireUltronPopup(index + 1);
             if (visibleRuleCount >= rules.length) break;
             const rulesToReveal = spawnWave % 2 === 0 ? 1 : 2;
             spawnWave += 1;
@@ -479,43 +661,78 @@
           tile.className = "captcha-tile";
           tile.setAttribute("aria-pressed", "false");
           tile.setAttribute("aria-label", `Monday morning photo ${index + 1}`);
-          tile.dataset.sadness = String(index === 4);
-          tile.innerHTML = `<span class="captcha-wall" aria-hidden="true"><span class="captcha-clock"></span>${index === 4 ? '<span class="captcha-marker"></span>' : ""}</span>`;
-          tile.addEventListener("click", () => {
-            const selected = tile.getAttribute("aria-pressed") === "true";
-            tile.setAttribute("aria-pressed", String(!selected));
-            tile.classList.toggle("is-selected", !selected);
-            document.querySelector("#captcha-error").textContent = "";
-          });
+          tile.dataset.sadness = "false";
+          tile.innerHTML = `<span class="captcha-wall" aria-hidden="true"><span class="captcha-clock"></span></span>`;
+          tile.addEventListener("click", () => handleTileClick(tile));
           captchaGrid.append(tile);
+        }
+        assignPunishingTile();
+      }
+
+      function assignPunishingTile() {
+        const tiles = [...captchaGrid.children];
+        const punishingIndex = Math.floor(Math.random() * tiles.length);
+        tiles.forEach((tile, index) => {
+          const isPunishing = index === punishingIndex;
+          tile.dataset.sadness = String(isPunishing);
+          const wall = tile.querySelector(".captcha-wall");
+          if (!wall) return;
+          wall.querySelector(".captcha-marker")?.remove();
+          if (isPunishing) {
+            const marker = document.createElement("span");
+            marker.className = "captcha-marker";
+            marker.setAttribute("aria-hidden", "true");
+            wall.append(marker);
+          }
+        });
+      }
+
+      function handleTileClick(tile) {
+        if (tile.classList.contains("is-cleared")) return;
+        if (tile.dataset.sadness === "true") {
+          punishCaptcha();
+          return;
+        }
+        tile.classList.add("is-cleared");
+        tile.setAttribute("aria-pressed", "true");
+        document.querySelector("#captcha-error").textContent = "";
+        if (captchaGrid.querySelectorAll(".is-cleared").length === 8) {
+          enterPlayer();
         }
       }
 
-      document.querySelector("#verify-humanity").addEventListener("click", () => {
-        const selectedTiles = [...captchaGrid.querySelectorAll('[aria-pressed="true"]')];
-        if (selectedTiles.length === 1 && selectedTiles[0].dataset.sadness === "true") {
-          enterPlayer();
-          return;
-        }
-
-        const error = document.querySelector("#captcha-error");
-        const card = document.querySelector("#captcha-card");
-        error.textContent = "A robot would definitely click that. Try again.";
-        error.classList.remove("captcha-error");
-        card.classList.remove("captcha-shake");
-        void card.offsetWidth;
-        error.classList.add("captcha-error");
-        card.classList.add("captcha-shake");
-        for (const tile of selectedTiles) {
-          tile.setAttribute("aria-pressed", "false");
-          tile.classList.remove("is-selected");
-        }
+      function shuffleCaptchaTiles() {
         const tiles = [...captchaGrid.children];
         for (let index = tiles.length - 1; index > 0; index -= 1) {
           const swapIndex = Math.floor(Math.random() * (index + 1));
           [tiles[index], tiles[swapIndex]] = [tiles[swapIndex], tiles[index]];
         }
         tiles.forEach(tile => captchaGrid.append(tile));
+      }
+
+      function punishCaptcha() {
+        const error = document.querySelector("#captcha-error");
+        const card = document.querySelector("#captcha-card");
+        error.textContent = "A robot would have clicked that! Restarting your humiliation...";
+        error.classList.remove("captcha-error");
+        card.classList.remove("captcha-shake");
+        void card.offsetWidth;
+        error.classList.add("captcha-error");
+        card.classList.add("captcha-shake");
+        for (const tile of captchaGrid.children) {
+          tile.classList.remove("is-cleared");
+          tile.setAttribute("aria-pressed", "false");
+        }
+        shuffleCaptchaTiles();
+        assignPunishingTile();
+      }
+
+      document.querySelector("#verify-humanity").addEventListener("click", () => {
+        if (captchaGrid.querySelectorAll(".is-cleared").length === 8) {
+          enterPlayer();
+          return;
+        }
+        punishCaptcha();
       });
 
       document.querySelector("#robot-surrender").addEventListener("click", () => {
@@ -782,6 +999,214 @@
       document.querySelector("#mood").addEventListener("click", event => {
         const moods = ["Mildly alarmed", "Deeply crunchy", "Wood-adjacent", "Buffering emotionally", "IX out of ten pain"];
         event.currentTarget.textContent = moods[Math.floor(Math.random() * moods.length)];
+      });
+
+      const vibeModal = document.querySelector("#vibe-modal");
+      const vibeLoading = document.querySelector("#vibe-loading");
+      const vibeInput = document.querySelector("#vibe-input");
+      document.querySelector("#customize-vibe").addEventListener("click", () => {
+        vibeInput.value = "";
+        vibeModal.classList.remove("hidden");
+        vibeModal.classList.add("flex");
+        vibeInput.focus();
+      });
+      document.querySelector("#vibe-cancel").addEventListener("click", () => {
+        vibeModal.classList.add("hidden");
+        vibeModal.classList.remove("flex");
+      });
+
+      let cursedNodes = {};
+      let cursedTimer;
+      function playCursedTrack() {
+        stopMusicSequence();
+        stopProgress();
+        isPlaying = false;
+        try { oscillator && oscillator.stop(); } catch (err) {}
+        try { harmonyOscillator && harmonyOscillator.stop(); } catch (err) {}
+        for (const key in cursedNodes) {
+          try { cursedNodes[key].stop && cursedNodes[key].stop(); } catch (err) {}
+          try { cursedNodes[key].disconnect && cursedNodes[key].disconnect(); } catch (err) {}
+        }
+        cursedNodes = {};
+        clearInterval(cursedTimer);
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!audioContext && AudioContextClass) {
+          audioContext = new AudioContextClass();
+          masterGain = audioContext.createGain();
+          masterGain.connect(audioContext.destination);
+        }
+        if (!audioContext) return;
+        if (audioContext.state === "suspended") audioContext.resume();
+
+        document.querySelector("#track-title").textContent = "FORCED UPGRADE: 10-HOUR EAR-BLEED REMIX";
+        document.querySelector("#track-artist").textContent = "Federal Offense Committee";
+        document.querySelector("#track-number").textContent = "66";
+        playButton.textContent = "Ⅱ Pause";
+
+        masterGain.gain.cancelScheduledValues(audioContext.currentTime);
+        masterGain.gain.setTargetAtTime(0.32, audioContext.currentTime, 0.05);
+
+        const bufferSize = audioContext.sampleRate * 2;
+        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+        const noise = audioContext.createBufferSource();
+        noise.buffer = noiseBuffer;
+        noise.loop = true;
+
+        const shaper = audioContext.createWaveShaper();
+        const curve = new Float32Array(44100);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < 44100; i++) {
+          const x = (i * 2) / 44100 - 1;
+          curve[i] = ((3 + 100) * x * 20 * deg) / (Math.PI + 100 * Math.abs(x));
+        }
+        shaper.curve = curve;
+
+        const noiseFilter = audioContext.createBiquadFilter();
+        noiseFilter.type = "bandpass";
+        noiseFilter.frequency.value = 1200;
+        noiseFilter.Q.value = 0.7;
+
+        noise.connect(shaper);
+        shaper.connect(noiseFilter);
+        noiseFilter.connect(masterGain);
+        noise.start();
+
+        const osc1 = audioContext.createOscillator();
+        osc1.type = "sawtooth";
+        osc1.frequency.value = 110;
+        const osc2 = audioContext.createOscillator();
+        osc2.type = "square";
+        osc2.frequency.value = 117.5;
+        const osc3 = audioContext.createOscillator();
+        osc3.type = "square";
+        osc3.frequency.value = 2400;
+
+        const oscGain = audioContext.createGain();
+        oscGain.gain.value = 0.16;
+        osc1.connect(oscGain);
+        osc2.connect(oscGain);
+        osc3.connect(oscGain);
+        oscGain.connect(masterGain);
+
+        osc1.start();
+        osc2.start();
+        osc3.start();
+
+        cursedNodes = { noise, osc1, osc2, osc3, shaper, noiseFilter, oscGain };
+        isPlaying = true;
+        startProgress();
+
+        cursedTimer = setInterval(() => {
+          if (!audioContext) return;
+          const base = 70 + Math.random() * 240;
+          osc1.frequency.setTargetAtTime(base, audioContext.currentTime, 0.05);
+          osc2.frequency.setTargetAtTime(base + 3 + Math.random() * 32, audioContext.currentTime, 0.05);
+          osc3.frequency.setTargetAtTime(1400 + Math.random() * 3200, audioContext.currentTime, 0.04);
+          noiseFilter.frequency.setTargetAtTime(250 + Math.random() * 2600, audioContext.currentTime, 0.1);
+        }, 260);
+      }
+
+      let vibeLoadingInterval;
+      document.querySelector("#vibe-submit").addEventListener("click", () => {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!audioContext && AudioContextClass) {
+          audioContext = new AudioContextClass();
+          masterGain = audioContext.createGain();
+          masterGain.connect(audioContext.destination);
+        }
+        if (audioContext && audioContext.state === "suspended") audioContext.resume();
+        vibeModal.classList.add("hidden");
+        vibeModal.classList.remove("flex");
+        vibeLoading.classList.remove("hidden");
+        vibeLoading.classList.add("flex");
+        const percent = document.querySelector("#vibe-loading-percent");
+        let current = 0;
+        percent.textContent = "0%";
+        clearInterval(vibeLoadingInterval);
+        vibeLoadingInterval = setInterval(() => {
+          current = Math.min(99, current + 14);
+          percent.textContent = `${current}%`;
+        }, 260);
+        window.setTimeout(() => {
+          clearInterval(vibeLoadingInterval);
+          vibeLoading.classList.add("hidden");
+          vibeLoading.classList.remove("flex");
+          playCursedTrack();
+          openInsultModal();
+        }, 2000);
+      });
+
+      const insultModal = document.querySelector("#insult-modal");
+      const insultClose = document.querySelector("#insult-close");
+      const insultClicksEl = document.querySelector("#insult-clicks");
+      let insultClicks = 0;
+      const INSULT_CLICKS_NEEDED = 5;
+      const INSULT_MOVES_PER_BURST = 5;
+      const INSULT_MOVE_INTERVAL = 180;
+      const INSULT_PAUSE_MS = 3000;
+      let insultMoveTimer;
+      let insultPauseTimer;
+      let insultCycleActive = false;
+
+      function positionInsultClose() {
+        const panel = insultModal.querySelector("div");
+        const rect = panel.getBoundingClientRect();
+        const btnRect = insultClose.getBoundingClientRect();
+        const maxLeft = Math.max(4, rect.width - btnRect.width - 8);
+        const maxTop = Math.max(4, rect.height - btnRect.height - 8);
+        insultClose.style.left = `${Math.random() * maxLeft}px`;
+        insultClose.style.top = `${Math.random() * maxTop}px`;
+      }
+
+      function stopInsultCycle() {
+        insultCycleActive = false;
+        clearInterval(insultMoveTimer);
+        clearTimeout(insultPauseTimer);
+        insultMoveTimer = null;
+        insultPauseTimer = null;
+      }
+
+      function startInsultMoveBurst() {
+        if (!insultCycleActive) return;
+        let movesLeft = INSULT_MOVES_PER_BURST;
+        positionInsultClose();
+        insultMoveTimer = setInterval(() => {
+          if (!insultCycleActive) return;
+          positionInsultClose();
+          movesLeft -= 1;
+          if (movesLeft <= 0) {
+            clearInterval(insultMoveTimer);
+            insultMoveTimer = null;
+            insultPauseTimer = setTimeout(startInsultMoveBurst, INSULT_PAUSE_MS);
+          }
+        }, INSULT_MOVE_INTERVAL);
+      }
+
+      function openInsultModal() {
+        insultClicks = 0;
+        insultClicksEl.textContent = "0";
+        insultModal.classList.remove("hidden");
+        insultModal.classList.add("flex");
+        stopInsultCycle();
+        insultCycleActive = true;
+        window.setTimeout(positionInsultClose, 30);
+        startInsultMoveBurst();
+      }
+
+      insultClose.addEventListener("click", () => {
+        insultClicks += 1;
+        insultClicksEl.textContent = String(insultClicks);
+        if (insultClicks >= INSULT_CLICKS_NEEDED) {
+          stopInsultCycle();
+          insultModal.classList.add("hidden");
+          insultModal.classList.remove("flex");
+          showToast("You accepted your forced upgrade. There is no refund.");
+          return;
+        }
+        positionInsultClose();
       });
     </script>
   </body>
