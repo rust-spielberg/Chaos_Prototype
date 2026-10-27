@@ -9,8 +9,6 @@
 
 ### 1. The Frontpage: Cinema Directory
 The entry point of the chaos. Users are greeted by a striking neo-brutalist acid-yellow interface featuring seven distinct cinema complexes—ranging from fully operational hubs to sealed, missing, or locked arenas[span_5](start_span)[span_5](end_span).
-* **Screenshot:**
-  ![landing page](./1st.png)
 
 ### 2. The F12 Gatekeeper Gauntlet
 To unlock the stable seat map in restricted screens (like *VIP Secret Screen A*), users must clear at least one trial out of three psychological hurdles[span_6](start_span)[span_6](end_span)[span_7](start_span)[span_7](end_span):
